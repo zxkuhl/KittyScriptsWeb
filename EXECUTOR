@@ -1,995 +1,323 @@
--- ZTECH DELTA V3 - FINAL (Glass Bar + Minimize square w/ Z logo + color chooser)
--- Key: zxkuhl123
--- Paste as single LocalScript in StarterPlayerScripts or StarterGui
-
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
-local PlayerGui = player:WaitForChild("PlayerGui")
-
--- Remove previous UI if exists
-local old = PlayerGui:FindFirstChild("ZTECH_DELTA")
-if old then old:Destroy() end
-
--- Helpers
-local function round(obj, radius)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, radius or 8)
-    c.Parent = obj
-end
-local function stroke(obj, color, thickness)
-    local s = Instance.new("UIStroke")
-    s.Color = color or Color3.fromRGB(0,140,255)
-    s.Thickness = thickness or 2
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = obj
-    return s
-end
-local function makeBtn(parent, props)
-    local b = Instance.new("TextButton")
-    for k,v in pairs(props or {}) do if k ~= "Parent" then b[k] = v end end
-    if props.Parent then b.Parent = props.Parent else b.Parent = parent end
-    round(b, props._corner or 8)
-    return b
-end
-
--- Font & sizing preferences (smaller text)
-local FONT = Enum.Font.Gotham
-local TITLE_SIZE = 18
-local SUB_SIZE = 14
-local BTN_SIZE = 14
-
--- Top-level ScreenGui
-local gui = Instance.new("ScreenGui")
-gui.Name = "ZTECH_DELTA"
-gui.ResetOnSpawn = false
-gui.Parent = PlayerGui
-
--- Blur effect
-local cam = workspace.CurrentCamera
-local blur = Instance.new("BlurEffect")
-blur.Name = "ZTECH_BLUR"
-blur.Size = 8
-blur.Parent = cam
-blur.Enabled = true
-
--- Main Frame (center-locked, medium)
-local main = Instance.new("Frame")
-main.Name = "Main"
-main.Size = UDim2.new(0, 600, 0, 400)
-main.Position = UDim2.new(0.5, -300, 0.5, -200)
-main.BackgroundTransparency = 0.32
-main.BackgroundColor3 = Color3.fromRGB(12,14,18)
-main.BorderSizePixel = 0
-main.Parent = gui
-round(main, 14)
-local mainStroke = stroke(main, Color3.fromRGB(0,140,255), 2)
-
--- Top Glass Titlebar (Delta Glass Bar)
-local titleBar = Instance.new("Frame")
-titleBar.Name = "TitleBar"
-titleBar.Size = UDim2.new(1, 0, 0, 36)
-titleBar.Position = UDim2.new(0, 0, 0, 0)
-titleBar.BackgroundTransparency = 0.1
-titleBar.BackgroundColor3 = Color3.fromRGB(22,24,30)
-titleBar.Parent = main
-round(titleBar, 12)
-
--- Neon bottom line for titlebar
-local titleStroke = Instance.new("Frame", titleBar)
-titleStroke.Size = UDim2.new(1, -12, 0, 4)
-titleStroke.Position = UDim2.new(0,6,1,-6)
-titleStroke.AnchorPoint = Vector2.new(0,0)
-titleStroke.BackgroundColor3 = Color3.fromRGB(0,140,255)
-titleStroke.BorderSizePixel = 0
-round(titleStroke, 6)
-
--- Title label (smaller)
-local titleLabel = Instance.new("TextLabel", titleBar)
-titleLabel.Size = UDim2.new(0.6, -10, 1, 0)
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Font = FONT
-titleLabel.TextSize = TITLE_SIZE
-titleLabel.TextColor3 = Color3.fromRGB(200,220,255)
-titleLabel.Text = "ZTECH DELTA"
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
--- Top-right minimize button (style 3: box-with-arrow style)
-local minimizeBtn = Instance.new("TextButton", titleBar)
-minimizeBtn.Size = UDim2.new(0, 36, 0, 28)
-minimizeBtn.Position = UDim2.new(1, -46, 0, 4)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(20,22,28)
-minimizeBtn.BorderSizePixel = 0
-minimizeBtn.Text = "⌗" -- a box-like glyph; feels like box-with-arrow
-minimizeBtn.Font = FONT
-minimizeBtn.TextSize = 18
-minimizeBtn.TextColor3 = Color3.fromRGB(235,235,235)
-round(minimizeBtn, 6)
-
--- Add a tiny tooltip label for minimize
-local minTip = Instance.new("TextLabel", titleBar)
-minTip.Size = UDim2.new(0, 140, 0, 18)
-minTip.Position = UDim2.new(1, -196, 0, 6)
-minTip.BackgroundTransparency = 1
-minTip.Text = "Minimize"
-minTip.Font = FONT
-minTip.TextSize = 12
-minTip.TextColor3 = Color3.fromRGB(180,200,255)
-minTip.TextXAlignment = Enum.TextXAlignment.Right
-
--- Sidebar with Delta-style icons (simple vector feel using glyphs)
-local sidebar = Instance.new("Frame")
-sidebar.Name = "Sidebar"
-sidebar.Size = UDim2.new(0, 60, 1, -10)
-sidebar.Position = UDim2.new(0, 6, 0, 36)
-sidebar.BackgroundColor3 = Color3.fromRGB(10,10,14)
-sidebar.BorderSizePixel = 0
-sidebar.Parent = main
-round(sidebar, 10)
-
-local function MakeIcon(name, glyph, order)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(1, -8, 0, 46)
-    btn.Position = UDim2.new(0, 4, 0, 8 + ((order - 1) * 54))
-    btn.BackgroundTransparency = 1
-    btn.Text = glyph
-    btn.Font = FONT
-    btn.TextSize = 20
-    btn.TextColor3 = Color3.fromRGB(230,230,230)
-    btn.Parent = sidebar
-    return btn
-end
-
--- Glyphs chosen to feel delta-like (clean, small)
-local btnHome = MakeIcon("Home", "⌂", 1)
-local btnSearch = MakeIcon("Search", "🔎", 2)
-local btnExec = MakeIcon("Executor", "▤", 3) -- window-like glyph
-local btnSaved = MakeIcon("Saved", "❐", 4)
-local btnSettings = MakeIcon("Settings", "⚙", 5)
-
--- Pages container
-local pages = Instance.new("Frame")
-pages.Name = "Pages"
-pages.Size = UDim2.new(1, -92, 1, -56)
-pages.Position = UDim2.new(0, 86, 0, 36)
-pages.BackgroundTransparency = 1
-pages.Parent = main
-
-local function NewPage(title)
-    local p = Instance.new("Frame")
-    p.Size = UDim2.new(1, 0, 1, 0)
-    p.BackgroundTransparency = 1
-    p.Visible = false
-    p.Name = title
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 28)
-    label.Position = UDim2.new(0,0,0,6)
-    label.BackgroundTransparency = 1
-    label.Text = title
-    label.Font = FONT
-    label.TextSize = SUB_SIZE
-    label.TextColor3 = Color3.fromRGB(180,200,255)
-    label.Parent = p
-    p.Parent = pages
-    return p
-end
-
-local pageHome = NewPage("Home")
-local pageSearch = NewPage("Search")
-local pageExec = NewPage("Executor")
-local pageSaved = NewPage("Saved Scripts")
-local pageSettings = NewPage("Settings")
-
-local function Show(page)
-    for _,pg in ipairs(pages:GetChildren()) do
-        if pg:IsA("Frame") then
-            pg.Visible = (pg == page)
-        end
-    end
-end
-Show(pageHome)
-
-btnHome.MouseButton1Click:Connect(function() Show(pageHome) end)
-btnSearch.MouseButton1Click:Connect(function() Show(pageSearch) end)
-btnExec.MouseButton1Click:Connect(function() Show(pageExec) end)
-btnSaved.MouseButton1Click:Connect(function() Show(pageSaved) end)
-btnSettings.MouseButton1Click:Connect(function() Show(pageSettings) end)
-
--- ========== Executor UI ==========
-local execInput = Instance.new("TextBox")
-execInput.Size = UDim2.new(1, -20, 0, 150)
-execInput.Position = UDim2.new(0, 10, 0, 38)
-execInput.MultiLine = true
-execInput.PlaceholderText = "-- paste or write code here"
-execInput.Text = ""
-execInput.ClearTextOnFocus = false
-execInput.TextWrapped = true
-execInput.BackgroundColor3 = Color3.fromRGB(18,18,22)
-execInput.TextColor3 = Color3.fromRGB(220,220,255)
-execInput.Font = FONT
-execInput.TextSize = BTN_SIZE
-round(execInput,8)
-execInput.Parent = pageExec
-
-local execButtons = Instance.new("Frame")
-execButtons.Size = UDim2.new(1, -20, 0, 36)
-execButtons.Position = UDim2.new(0, 10, 0, 198)
-execButtons.BackgroundTransparency = 1
-execButtons.Parent = pageExec
-
-local runBtn = makeBtn(execButtons, {
-    Size = UDim2.new(0, 92, 1, 0),
-    Position = UDim2.new(0, 0, 0, 0),
-    BackgroundColor3 = Color3.fromRGB(60,120,240),
-    Text = "Run",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-local clearBtn = makeBtn(execButtons, {
-    Size = UDim2.new(0, 92, 1, 0),
-    Position = UDim2.new(0, 104, 0, 0),
-    BackgroundColor3 = Color3.fromRGB(120,120,120),
-    Text = "Clear",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-local saveExecBtn = makeBtn(execButtons, {
-    Size = UDim2.new(0, 92, 1, 0),
-    Position = UDim2.new(0, 208, 0, 0),
-    BackgroundColor3 = Color3.fromRGB(30,200,140),
-    Text = "+ Save",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-
-local outLabel = Instance.new("TextLabel")
-outLabel.Size = UDim2.new(1, -20, 0, 64)
-outLabel.Position = UDim2.new(0, 10, 0, 242)
-outLabel.BackgroundColor3 = Color3.fromRGB(16,16,20)
-outLabel.Text = "Console output will show here."
-outLabel.TextWrapped = true
-outLabel.TextXAlignment = Enum.TextXAlignment.Left
-outLabel.TextYAlignment = Enum.TextYAlignment.Top
-outLabel.TextColor3 = Color3.fromRGB(200,200,255)
-outLabel.Font = FONT
-outLabel.TextSize = BTN_SIZE
-round(outLabel, 8)
-outLabel.Parent = pageExec
-
--- ========== Saved Scripts ==========
-local savedScripts = {} -- in-session store
-
-local saveList = Instance.new("ScrollingFrame")
-saveList.Size = UDim2.new(1, -20, 1, -70)
-saveList.Position = UDim2.new(0, 10, 0, 38)
-saveList.CanvasSize = UDim2.new(0,0,0,0)
-saveList.ScrollBarThickness = 6
-saveList.BackgroundTransparency = 1
-saveList.Parent = pageSaved
-local saveLayout = Instance.new("UIListLayout", saveList)
-saveLayout.Padding = UDim.new(0,6)
-
-local function refreshSavedList()
-    for _,c in pairs(saveList:GetChildren()) do
-        if c:IsA("Frame") or c:IsA("TextButton") then c:Destroy() end
-    end
-    for i,entry in ipairs(savedScripts) do
-        local item = Instance.new("Frame")
-        item.Size = UDim2.new(1, -10, 0, 44)
-        item.BackgroundColor3 = Color3.fromRGB(20,20,26)
-        item.Position = UDim2.new(0,5,0,0)
-        round(item,6)
-        item.Parent = saveList
-
-        local name = Instance.new("TextLabel")
-        name.Size = UDim2.new(0.56, 0, 1, 0)
-        name.Position = UDim2.new(0,8,0,0)
-        name.BackgroundTransparency = 1
-        name.Text = entry.name
-        name.TextColor3 = Color3.fromRGB(200,230,255)
-        name.Font = FONT
-        name.TextSize = SUB_SIZE
-        name.TextXAlignment = Enum.TextXAlignment.Left
-        name.Parent = item
-
-        local execBtn = makeBtn(item, {
-            Size = UDim2.new(0, 64, 0, 30),
-            Position = UDim2.new(0.62, 0, 0.12, 0),
-            BackgroundColor3 = Color3.fromRGB(60,120,240),
-            Text = "Run",
-            Font = FONT,
-            TextSize = BTN_SIZE,
-            _corner = 6
-        })
-        local editBtn = makeBtn(item, {
-            Size = UDim2.new(0, 64, 0, 30),
-            Position = UDim2.new(0.74, 0, 0.12, 0),
-            BackgroundColor3 = Color3.fromRGB(80,140,100),
-            Text = "Edit",
-            Font = FONT,
-            TextSize = BTN_SIZE,
-            _corner = 6
-        })
-        local delBtn = makeBtn(item, {
-            Size = UDim2.new(0, 64, 0, 30),
-            Position = UDim2.new(0.86, 0, 0.12, 0),
-            BackgroundColor3 = Color3.fromRGB(160,60,60),
-            Text = "Delete",
-            Font = FONT,
-            TextSize = BTN_SIZE,
-            _corner = 6
-        })
-
-        execBtn.MouseButton1Click:Connect(function()
-            local fn = loadstring or load
-            local ok, err = pcall(function()
-                local f = (fn and fn(entry.script)) or load(entry.script)
-                if not f then error("load failed") end
-                local ok2, res = pcall(f)
-                if not ok2 then error(res) end
-                outLabel.Text = "Executed: "..tostring(entry.name)
-            end)
-            if not ok then outLabel.Text = "Error: "..tostring(err) end
-        end)
-        editBtn.MouseButton1Click:Connect(function()
-            execInput.Text = entry.script
-            Show(pageExec)
-        end)
-        delBtn.MouseButton1Click:Connect(function()
-            table.remove(savedScripts, i)
-            refreshSavedList()
-        end)
-    end
-    saveList.CanvasSize = UDim2.new(0,0,0, saveLayout.AbsoluteContentSize.Y + 10)
-end
-
--- ========== Create Popup ==========
-local popup = Instance.new("Frame")
-popup.Size = UDim2.new(0, 420, 0, 300)
-popup.Position = UDim2.new(0.5, -210, 0.5, -150)
-popup.BackgroundColor3 = Color3.fromRGB(18,18,24)
-popup.Visible = false
-popup.Parent = gui
-round(popup,10)
-stroke(popup, Color3.fromRGB(0,140,255), 1)
-
-local popTitle = Instance.new("TextLabel", popup)
-popTitle.Size = UDim2.new(1,0,0,36)
-popTitle.Position = UDim2.new(0,0,0,6)
-popTitle.BackgroundTransparency = 1
-popTitle.Text = "Create Script"
-popTitle.TextColor3 = Color3.fromRGB(200,230,255)
-popTitle.Font = FONT
-popTitle.TextSize = SUB_SIZE
-
-local nameLabel = Instance.new("TextLabel", popup)
-nameLabel.Size = UDim2.new(1, -20, 0, 18)
-nameLabel.Position = UDim2.new(0,10,0,48)
-nameLabel.BackgroundTransparency = 1
-nameLabel.Text = "NAME"
-nameLabel.TextColor3 = Color3.fromRGB(180,200,255)
-nameLabel.Font = FONT
-nameLabel.TextSize = BTN_SIZE
-
-local nameBox = Instance.new("TextBox", popup)
-nameBox.Size = UDim2.new(1, -20, 0, 30)
-nameBox.Position = UDim2.new(0,10,0,70)
-nameBox.BackgroundColor3 = Color3.fromRGB(22,22,28)
-nameBox.TextColor3 = Color3.fromRGB(220,220,255)
-nameBox.PlaceholderText = "Enter script name..."
-nameBox.Font = FONT
-nameBox.TextSize = BTN_SIZE
-round(nameBox,6)
-
-local scriptLabel = Instance.new("TextLabel", popup)
-scriptLabel.Size = UDim2.new(1, -20, 0, 18)
-scriptLabel.Position = UDim2.new(0,10,0,106)
-scriptLabel.BackgroundTransparency = 1
-scriptLabel.Text = "SCRIPT"
-scriptLabel.TextColor3 = Color3.fromRGB(180,200,255)
-scriptLabel.Font = FONT
-scriptLabel.TextSize = BTN_SIZE
-
-local scriptBox = Instance.new("TextBox", popup)
-scriptBox.Size = UDim2.new(1, -20, 0, 90)
-scriptBox.Position = UDim2.new(0,10,0,130)
-scriptBox.BackgroundColor3 = Color3.fromRGB(22,22,28)
-scriptBox.TextColor3 = Color3.fromRGB(220,220,255)
-scriptBox.MultiLine = true
-scriptBox.PlaceholderText = "-- script code"
-scriptBox.ClearTextOnFocus = false
-scriptBox.Font = FONT
-scriptBox.TextSize = BTN_SIZE
-round(scriptBox,6)
-
-local createBtn = makeBtn(popup, {
-    Size = UDim2.new(0, 120, 0, 36),
-    Position = UDim2.new(0.5, -60, 1, -44),
-    BackgroundColor3 = Color3.fromRGB(30,200,140),
-    Text = "+ Create",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-local cancelBtn = makeBtn(popup, {
-    Size = UDim2.new(0, 80, 0, 28),
-    Position = UDim2.new(0.5, 70, 1, -42),
-    BackgroundColor3 = Color3.fromRGB(160,80,80),
-    Text = "Cancel",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-
-createBtn.MouseButton1Click:Connect(function()
-    local nm = tostring(nameBox.Text or ""):gsub("^%s*(.-)%s*$","%1")
-    local sc = tostring(scriptBox.Text or "")
-    if nm == "" or sc == "" then
-        local t = TweenService:Create(popup, TweenInfo.new(0.06, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 4, true), {Position = popup.Position + UDim2.new(0,6,0,0)})
-        t:Play()
-        return
-    end
-    table.insert(savedScripts, {name = nm, script = sc})
-    nameBox.Text = ""
-    scriptBox.Text = ""
-    popup.Visible = false
-    refreshSavedList()
-end)
-cancelBtn.MouseButton1Click:Connect(function() popup.Visible = false end)
-
-saveExecBtn.MouseButton1Click:Connect(function()
-    popup.Visible = true
-    scriptBox.Text = execInput.Text
-    nameBox.Text = "New Script"
-end)
-
--- Run / Clear logic
-runBtn.MouseButton1Click:Connect(function()
-    local code = execInput.Text
-    if code == "" then outLabel.Text = "No script to run." return end
-    local fn = loadstring or load
-    local ok, err = pcall(function()
-        local f = (fn and fn(code)) or load(code)
-        if not f then error("load failed") end
-        local ok2, res = pcall(f)
-        if not ok2 then error(res) end
-        outLabel.Text = "Executed successfully."
-    end)
-    if not ok then outLabel.Text = "Error: "..tostring(err) end
-end)
-clearBtn.MouseButton1Click:Connect(function()
-    execInput.Text = ""
-    outLabel.Text = "Console output will show here."
-end)
-
--- ========== Search Page ==========
-local searchBox = Instance.new("TextBox", pageSearch)
-searchBox.Size = UDim2.new(1, -20, 0, 36)
-searchBox.Position = UDim2.new(0,10,0,38)
-searchBox.PlaceholderText = "Search for scripts..."
-searchBox.BackgroundColor3 = Color3.fromRGB(22,22,28)
-searchBox.TextColor3 = Color3.fromRGB(230,230,255)
-searchBox.Font = FONT
-searchBox.TextSize = BTN_SIZE
-round(searchBox,6)
-
-local resultsFrame = Instance.new("ScrollingFrame", pageSearch)
-resultsFrame.Size = UDim2.new(1, -20, 1, -110)
-resultsFrame.Position = UDim2.new(0,10,0,84)
-resultsFrame.BackgroundTransparency = 1
-resultsFrame.CanvasSize = UDim2.new(0,0,0,0)
-resultsFrame.ScrollBarThickness = 6
-local resultsLayout = Instance.new("UIListLayout", resultsFrame)
-resultsLayout.Padding = UDim.new(0,6)
-
--- Levenshtein distance (spelling tolerant)
-local function levenshtein(a,b)
-    a = tostring(a or "")
-    b = tostring(b or "")
-    local al = #a
-    local bl = #b
-    if al == 0 then return bl end
-    if bl == 0 then return al end
-    local row = {}
-    for i=0,bl do row[i] = i end
-    for i=1,al do
-        local prev = row[0]
-        row[0] = i
-        for j=1,bl do
-            local cur = row[j]
-            local cost = (a:sub(i,i) == b:sub(j,j)) and 0 or 1
-            local m = prev + cost
-            local del = row[j] + 1
-            local ins = row[j-1] + 1
-            local best = m
-            if del < best then best = del end
-            if ins < best then best = ins end
-            prev = cur
-            row[j] = best
-        end
-    end
-    return row[bl]
-end
-
-local function scoreMatch(query, target)
-    if query == "" then return 0 end
-    query = query:lower()
-    target = target:lower()
-    if target:find(query, 1, true) then
-        return 100 + (#query)
-    end
-    local dist = levenshtein(query, target)
-    local maxlen = math.max(#query, #target)
-    local norm = 1 - (dist / maxlen)
-    if norm < 0 then norm = 0 end
-    return norm * 100
-end
-
-local function showSearchResults(q)
-    for _,c in pairs(resultsFrame:GetChildren()) do if c:IsA("Frame") or c:IsA("TextButton") then c:Destroy() end end
-    local matches = {}
-    for i,entry in ipairs(savedScripts) do
-        local sc = scoreMatch(q, entry.name)
-        if sc > 0 then table.insert(matches, {score = sc, data = entry, idx = i}) end
-    end
-    table.sort(matches, function(a,b) return a.score > b.score end)
-    for _,m in ipairs(matches) do
-        local v = m.data
-        local item = Instance.new("Frame")
-        item.Size = UDim2.new(1, -10, 0, 44)
-        item.BackgroundColor3 = Color3.fromRGB(20,20,26)
-        round(item,6)
-        item.Parent = resultsFrame
-
-        local name = Instance.new("TextLabel")
-        name.Size = UDim2.new(0.6, 0, 1, 0)
-        name.Position = UDim2.new(0,8,0,0)
-        name.BackgroundTransparency = 1
-        name.Text = v.name
-        name.TextColor3 = Color3.fromRGB(200,230,255)
-        name.Font = FONT
-        name.TextSize = SUB_SIZE
-        name.TextXAlignment = Enum.TextXAlignment.Left
-        name.Parent = item
-
-        local runB = makeBtn(item, {
-            Size = UDim2.new(0, 70, 0, 30),
-            Position = UDim2.new(0.68, 0, 0.12, 0),
-            BackgroundColor3 = Color3.fromRGB(60,120,240),
-            Text = "Run",
-            Font = FONT,
-            TextSize = BTN_SIZE,
-            _corner = 6
-        })
-        local saveB = makeBtn(item, {
-            Size = UDim2.new(0, 70, 0, 30),
-            Position = UDim2.new(0.85, 0, 0.12, 0),
-            BackgroundColor3 = Color3.fromRGB(30,200,140),
-            Text = "Save",
-            Font = FONT,
-            TextSize = BTN_SIZE,
-            _corner = 6
-        })
-        runB.MouseButton1Click:Connect(function()
-            local fn = loadstring or load
-            local ok, err = pcall(function()
-                local f = (fn and fn(v.script)) or load(v.script)
-                if not f then error("load failed") end
-                local ok2, res = pcall(f)
-                if not ok2 then error(res) end
-                outLabel.Text = "Executed: "..tostring(v.name)
-            end)
-            if not ok then outLabel.Text = "Error: "..tostring(err) end
-        end)
-        saveB.MouseButton1Click:Connect(function()
-            table.insert(savedScripts, {name = v.name, script = v.script})
-            refreshSavedList()
-        end)
-    end
-    resultsFrame.CanvasSize = UDim2.new(0,0,0, resultsLayout.AbsoluteContentSize.Y + 10)
-end
-
-searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    showSearchResults(tostring(searchBox.Text or ""))
-end)
-
--- ========== Home Quick Controls ==========
-local homeQuickFrame = Instance.new("Frame")
-homeQuickFrame.Size = UDim2.new(1, -20, 0, 86)
-homeQuickFrame.Position = UDim2.new(0,10,0,38)
-homeQuickFrame.BackgroundTransparency = 1
-homeQuickFrame.Parent = pageHome
-
-local quickCreate = makeBtn(homeQuickFrame, {
-    Size = UDim2.new(0, 140, 0, 34),
-    Position = UDim2.new(0,0,0,0),
-    BackgroundColor3 = Color3.fromRGB(30,200,140),
-    Text = "+ Create Script",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-local quickOpenSaved = makeBtn(homeQuickFrame, {
-    Size = UDim2.new(0, 140, 0, 34),
-    Position = UDim2.new(0,150,0,0),
-    BackgroundColor3 = Color3.fromRGB(60,120,240),
-    Text = "Saved Scripts",
-    Font = FONT,
-    TextSize = BTN_SIZE
-})
-quickCreate.MouseButton1Click:Connect(function() popup.Visible = true end)
-quickOpenSaved.MouseButton1Click:Connect(function() Show(pageSaved) end)
-
--- ========== Settings: mini box color chooser ==========
-local settingsLabel = Instance.new("TextLabel", pageSettings)
-settingsLabel.Size = UDim2.new(1, -20, 0, 22)
-settingsLabel.Position = UDim2.new(0,10,0,38)
-settingsLabel.BackgroundTransparency = 1
-settingsLabel.Text = "Mini-box outline color (click to select)"
-settingsLabel.Font = FONT
-settingsLabel.TextSize = SUB_SIZE
-settingsLabel.TextColor3 = Color3.fromRGB(200,230,255)
-
-local colorPalette = {
-    Color3.fromRGB(0,140,255), -- blue
-    Color3.fromRGB(0,200,140), -- green
-    Color3.fromRGB(200,80,80), -- red
-    Color3.fromRGB(255,170,0), -- orange
-    Color3.fromRGB(180,90,255) -- purple
-}
-
-local miniOutlineColor = Color3.fromRGB(0,140,255)
-
-for i, col in ipairs(colorPalette) do
-    local cb = Instance.new("Frame", pageSettings)
-    cb.Size = UDim2.new(0, 36, 0, 36)
-    cb.Position = UDim2.new(0, 12 + ((i-1) * 46), 0, 70)
-    cb.BackgroundColor3 = col
-    cb.BorderSizePixel = 0
-    round(cb, 8)
-    cb.Name = "Color_"..i
-
-    local btn = Instance.new("TextButton", cb)
-    btn.Size = UDim2.new(1,0,1,0)
-    btn.BackgroundTransparency = 1
-    btn.Text = ""
-    btn.MouseButton1Click:Connect(function()
-        miniOutlineColor = col
-        -- if minimizedBox exists, update its outline
-        if gui:FindFirstChild("MinimizedBox") then
-            local mb = gui.MinimizedBox
-            if mb:FindFirstChild("Outline") then mb.Outline.Color = col end
-        end
-    end)
-end
-
--- ========== KEY SYSTEM ==========
-local KEY_REQUIRED = "zxkuhl123"
-
-local keyGui = Instance.new("Frame")
-keyGui.Name = "KeySystem"
-keyGui.Size = UDim2.new(0, 420, 0, 210)
-keyGui.Position = UDim2.new(0.5, -210, 0.5, -105)
-keyGui.BackgroundColor3 = Color3.fromRGB(15,15,20)
-keyGui.BackgroundTransparency = 0.25
-keyGui.BorderSizePixel = 0
-keyGui.Parent = gui
-round(keyGui, 12)
-stroke(keyGui, Color3.fromRGB(0,140,255), 2)
-
-local keyTitle = Instance.new("TextLabel", keyGui)
-keyTitle.Size = UDim2.new(1,0,0,40)
-keyTitle.Position = UDim2.new(0,0,0,6)
-keyTitle.BackgroundTransparency = 1
-keyTitle.Text = "🔐 Enter Key"
-keyTitle.Font = FONT
-keyTitle.TextSize = TITLE_SIZE
-keyTitle.TextColor3 = Color3.fromRGB(180,200,255)
-
-local keyBox = Instance.new("TextBox", keyGui)
-keyBox.Size = UDim2.new(1, -40, 0, 50)
-keyBox.Position = UDim2.new(0,20,0,70)
-keyBox.PlaceholderText = "Enter key..."
-keyBox.Text = ""
-keyBox.Font = FONT
-keyBox.TextSize = SUB_SIZE
-keyBox.BackgroundColor3 = Color3.fromRGB(20,20,28)
-keyBox.TextColor3 = Color3.fromRGB(255,255,255)
-round(keyBox, 8)
-
-local submit = makeBtn(keyGui, {
-    Size = UDim2.new(0,150,0,44),
-    Position = UDim2.new(0.5, -75, 1, -60),
-    BackgroundColor3 = Color3.fromRGB(0,120,255),
-    Text = "Unlock",
-    Font = FONT,
-    TextSize = SUB_SIZE
-})
-
--- Hide main UI and pages until unlocked
-local function lockAll()
-    main.Visible = false
-    for _,c in ipairs(gui:GetChildren()) do
-        if c ~= keyGui and c ~= blur then
-            pcall(function() c.Visible = false end)
-        end
-    end
-    -- Also hide main contents defensively
-    for _,d in ipairs(main:GetDescendants()) do
-        if d:IsA("Frame") or d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") or d:IsA("ScrollingFrame") then
-            pcall(function() d.Visible = false end)
-        end
-    end
-end
-lockAll()
-
--- unlock animations (same 4 types from before)
-local function anim1()
-    local flash = Instance.new("Frame", gui)
-    flash.Size = UDim2.new(1,0,1,0)
-    flash.BackgroundColor3 = Color3.fromRGB(0,140,255)
-    flash.BackgroundTransparency = 1
-    flash.ZIndex = 1000
-    flash.Name = "ZFlash"
-    round(flash,0)
-    TweenService:Create(flash, TweenInfo.new(0.12), {BackgroundTransparency = 0.6}):Play()
-    wait(0.12)
-    main.Position = UDim2.new(0.5, -800, 0.5, -200)
-    main.Visible = true
-    TweenService:Create(main, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -300, 0.5, -200)}):Play()
-    TweenService:Create(blur, TweenInfo.new(0.45), {Size = 4}):Play()
-    wait(0.35)
-    local ag = Instance.new("TextLabel", gui)
-    ag.Size = UDim2.new(0, 300, 0, 60)
-    ag.Position = UDim2.new(0.5, -150, 0.5, -220)
-    ag.BackgroundTransparency = 1
-    ag.Text = "ACCESS GRANTED"
-    ag.TextColor3 = Color3.fromRGB(220,255,255)
-    ag.TextScaled = true
-    ag.Font = FONT
-    TweenService:Create(ag, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-    wait(0.9)
-    ag:Destroy()
-    flash:Destroy()
-end
-local function anim2()
-    local boot = Instance.new("Frame", gui)
-    boot.Size = UDim2.new(1,0,1,0)
-    boot.BackgroundTransparency = 1
-    boot.Parent = gui
-    local label = Instance.new("TextLabel", boot)
-    label.Size = UDim2.new(1,0,0,200)
-    label.Position = UDim2.new(0,0,0,50)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.SourceSans
-    label.TextColor3 = Color3.fromRGB(80,255,80)
-    label.TextScaled = true
-    label.Text = ""
-    local text = "INITIALIZING... BOOT SEQUENCE\nACCESS PROTOCOL: ZTECH\n"
-    for i=1,#text do
-        label.Text = label.Text .. text:sub(i,i)
-        wait(0.01)
-    end
-    wait(0.2)
-    main.Position = UDim2.new(0.5, -300, -1, -200)
-    main.Visible = true
-    TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -300, 0.5, -200)}):Play()
-    TweenService:Create(blur, TweenInfo.new(0.5), {Size = 3}):Play()
-    wait(0.6)
-    boot:Destroy()
-end
-local function anim3()
-    main.Visible = true
-    main.Size = UDim2.new(0, 500, 0, 330)
-    main.Position = UDim2.new(0.5, -250, 0.5, -165)
-    TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0,600,0,400), Position = UDim2.new(0.5,-300,0.5,-200)}):Play()
-    TweenService:Create(blur, TweenInfo.new(0.4), {Size = 5}):Play()
-    wait(0.45)
-end
-local function anim4()
-    main.Visible = true
-    blur.Size = 6
-    local ag = Instance.new("TextLabel", gui)
-    ag.Size = UDim2.new(0, 240, 0, 52)
-    ag.Position = UDim2.new(0.5, -120, 0.5, -220)
-    ag.BackgroundTransparency = 1
-    ag.Text = "ACCESS GRANTED"
-    ag.TextColor3 = Color3.fromRGB(200,255,255)
-    ag.TextScaled = true
-    ag.Font = FONT
-    TweenService:Create(ag, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-    wait(0.9)
-    ag:Destroy()
-end
-
--- which animation selected (default 1)
-local selectedAnimation = 1
-
--- show page-specific selection visuals in settings
--- clickable buttons created below (reuse earlier pattern)
--- (we'll create them after defining UI elements for settings - already created color palette)
-
--- Reveal everything (used after animation)
-local function revealAll()
-    main.Visible = true
-    for _,c in ipairs(main:GetDescendants()) do
-        if c:IsA("Frame") or c:IsA("TextLabel") or c:IsA("TextButton") or c:IsA("TextBox") or c:IsA("ScrollingFrame") then
-            pcall(function() c.Visible = true end)
-        end
-    end
-    for _,obj in ipairs(gui:GetChildren()) do
-        if obj ~= keyGui and obj ~= blur then pcall(function() obj.Visible = true end) end
-    end
-    refreshSavedList()
-end
-
--- restore point for titlebar minimize state
-local isMinimized = false
-local minimizedBoxInstance = nil
-
--- create minimized box (tiny square with white background and black Z centered)
-local function createMinimizedBox()
-    if minimizedBoxInstance then minimizedBoxInstance:Destroy() end
-    local box = Instance.new("Frame")
-    box.Name = "MinimizedBox"
-    box.Size = UDim2.new(0, 52, 0, 52) -- small delta-like size
-    box.Position = UDim2.new(0.02, 0, 0.02, 0) -- top-left of screen (adjust as desired)
-    box.BackgroundColor3 = Color3.fromRGB(255,255,255) -- white logo bg
-    box.BorderSizePixel = 0
-    box.ZIndex = 1000
-    box.Parent = gui
-    round(box, 8)
-
-    -- outline stroke whose color is customizable (miniOutlineColor)
-    local outline = Instance.new("UIStroke", box)
-    outline.Name = "Outline"
-    outline.Color = miniOutlineColor
-    outline.Thickness = 2
-
-    -- inner black Z label
-    local zLabel = Instance.new("TextLabel", box)
-    zLabel.Size = UDim2.new(1, -8, 1, -8)
-    zLabel.Position = UDim2.new(0,4,0,4)
-    zLabel.BackgroundTransparency = 1
-    zLabel.Font = FONT
-    zLabel.TextSize = 26
-    zLabel.Text = "Z"
-    zLabel.TextColor3 = Color3.fromRGB(0,0,0)
-    zLabel.TextScaled = false
-    zLabel.TextStrokeTransparency = 1
-    zLabel.AnchorPoint = Vector2.new(0,0)
-    zLabel.TextXAlignment = Enum.TextXAlignment.Center
-    zLabel.TextYAlignment = Enum.TextYAlignment.Center
-
-    -- when clicked, restore UI
-    local btn = Instance.new("TextButton", box)
-    btn.Size = UDim2.new(1,0,1,0)
-    btn.BackgroundTransparency = 1
-    btn.Text = ""
-    btn.MouseButton1Click:Connect(function()
-        -- restore UI
-        if minimizedBoxInstance then minimizedBoxInstance:Destroy() end
-        minimizedBoxInstance = nil
-        isMinimized = false
-        revealAll()
-    end)
-    minimizedBoxInstance = box
-    return box
-end
-
--- minimize behavior: hide main & popups, show small box
-local function minimizeToBox()
-    if isMinimized then return end
-    -- hide everything (main + popups)
-    for _,obj in ipairs(gui:GetChildren()) do
-        if obj ~= minimizedBoxInstance and obj ~= blur then
-            pcall(function() obj.Visible = false end)
-        end
-    end
-    -- create minimized box
-    createMinimizedBox()
-    isMinimized = true
-end
-
--- minimize button logic
-minimizeBtn.MouseButton1Click:Connect(function()
-    -- create minimized box and hide UI
-    minimizeToBox()
-end)
-
--- If user presses minimize while already minimized (defensive), do nothing
--- make sure popup also hides when minimized
-local function hideAllUIExceptKeyAndMini()
-    for _,obj in ipairs(gui:GetChildren()) do
-        if obj ~= keyGui and obj ~= minimizedBoxInstance and obj ~= blur then
-            pcall(function() obj.Visible = false end)
-        end
-    end
-end
-
--- Unlock sequence handler using selectedAnimation
-local function UnlockSequence()
-    if selectedAnimation == 1 then anim1() elseif selectedAnimation == 2 then anim2() elseif selectedAnimation == 3 then anim3() else anim4() end
-    revealAll()
-    if keyGui and keyGui.Parent then keyGui:Destroy() end
-end
-
--- Submit / Enter behavior for key
-local function wrongKeyFeedback()
-    local info = TweenInfo.new(0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 4, true)
-    local goal = {Position = keyGui.Position + UDim2.new(0,8,0,0)}
-    TweenService:Create(keyGui, info, goal):Play()
-end
-
-submit.MouseButton1Click:Connect(function()
-    if tostring(keyBox.Text or "") == KEY_REQUIRED then
-        UnlockSequence()
-    else
-        wrongKeyFeedback()
-        keyBox.Text = ""
-        keyBox.PlaceholderText = "Wrong key!"
-    end
-end)
-keyBox.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        if tostring(keyBox.Text or "") == KEY_REQUIRED then UnlockSequence() else wrongKeyFeedback(); keyBox.Text = ""; keyBox.PlaceholderText = "Wrong key!" end
-    end
-end)
-
--- ========== Setup settings animation selector UI (shows which animation is chosen) ==========
-local animLabel = Instance.new("TextLabel", pageSettings)
-animLabel.Size = UDim2.new(1, -20, 0, 20)
-animLabel.Position = UDim2.new(0,10,0,140)
-animLabel.BackgroundTransparency = 1
-animLabel.Text = "Unlock Animation (select)"
-animLabel.Font = FONT
-animLabel.TextSize = SUB_SIZE
-animLabel.TextColor3 = Color3.fromRGB(200,230,255)
-
-local animButtons = {}
-local animNames = {
-    [1] = "Delta Swipe Fade",
-    [2] = "Hacker Terminal Boot",
-    [3] = "Smooth Fade + Pop",
-    [4] = "Executor Snap"
-}
-selectedAnimation = 1
-for i=1,4 do
-    local b = makeBtn(pageSettings, {
-        Size = UDim2.new(0, 260, 0, 34),
-        Position = UDim2.new(0, 10, 0, 170 + ((i-1)*40)),
-        BackgroundColor3 = Color3.fromRGB(40,40,46),
-        Text = tostring(i)..". "..animNames[i],
-        Font = FONT,
-        TextSize = BTN_SIZE
-    })
-    b.MouseButton1Click:Connect(function()
-        selectedAnimation = i
-        for _,bb in ipairs(animButtons) do bb.BackgroundColor3 = Color3.fromRGB(40,40,46) end
-        b.BackgroundColor3 = Color3.fromRGB(60,120,240)
-    end)
-    table.insert(animButtons, b)
-end
-animButtons[selectedAnimation].BackgroundColor3 = Color3.fromRGB(60,120,240)
-
--- ========== Final initial states and entrance
--- ensure main and pages not visible until unlock
-main.Visible = false
-for _,pg in ipairs(pages:GetChildren()) do if pg:IsA("Frame") then pg.Visible = false end end
-popup.Visible = false
-
--- small breathing pulse for keyGui
-spawn(function()
-    while keyGui and keyGui.Parent do
-        local t = TweenService:Create(keyGui, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {BackgroundTransparency = 0.18})
-        t:Play()
-        t.Completed:Wait()
-        local t2 = TweenService:Create(keyGui, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {BackgroundTransparency = 0.25})
-        t2:Play()
-        t2.Completed:Wait()
-    end
-end)
-
--- refresh list defensive
-refreshSavedList()
-
--- END OF SCRIPT
+import tkinter as tk
+import random
+import threading
+import time
+import ctypes
+import webbrowser
+
+# ======================
+# SETTINGS
+# ======================
+MAX_HOUR = 6
+
+def horror_intensity(hour):
+    return min(0.15 + hour * 0.15, 0.95)
+
+def glitch_text(text, hour):
+    out = ""
+    for c in text:
+        if random.random() < horror_intensity(hour):
+            out += random.choice("#%@&?")
+        else:
+            out += c
+    return out
+
+# ======================
+# GAME
+# ======================
+def run_game():
+    window = tk.Tk()
+    window.title("A Lil Game")
+    window.geometry("800x600")
+    window.configure(bg="black")
+
+    # ---- STATE ----
+    hour = 1
+    click_count = 0
+    power = 100
+    current_camera = 0
+    camera_disabled = False
+    cameras_open = False
+    door_timer = 0
+    golden_freddy_spawned = False
+
+    view = "center"
+    doors = {"left": False, "right": False}
+    lights = {"left": False, "right": False}
+
+    cameras = ["CAM 1A", "CAM 1B", "CAM 2A", "CAM 2B", "CAM 5"]
+    animatronics = ["chica", "foxy", "freddy", "bonnie", "golden_freddy"]
+
+    positions = {a: random.randint(0, 4) for a in animatronics}
+
+    colors = {
+        "chica": "yellow",
+        "foxy": "red",
+        "freddy": "brown",
+        "bonnie": "purple",
+        "golden_freddy": "gold"
+    }
+
+    # ---- UI ----
+    canvas = tk.Canvas(window, width=320, height=240, bg="black", highlightthickness=0)
+    canvas.pack(pady=10)
+
+    info = tk.Label(window, fg="white", bg="black", font=("Arial", 14))
+    info.pack()
+
+    power_label = tk.Label(window, fg="yellow", bg="black")
+    power_label.pack()
+
+    # ======================
+    # CAMERA MAP OVERLAY
+    # ======================
+    def draw_camera_map():
+        base_x = 10
+        base_y = 10
+        size = 38
+        spacing = 48
+
+        cam_positions = {
+            0: (base_x, base_y),                         # CAM 1A
+            1: (base_x + spacing, base_y),               # CAM 1B
+            2: (base_x, base_y + spacing),               # CAM 2A
+            3: (base_x + spacing, base_y + spacing),     # CAM 2B
+            4: (base_x + spacing // 2, base_y + spacing * 2)  # CAM 5
+        }
+
+        for cam, (x, y) in cam_positions.items():
+            color = "red" if cam == current_camera else "white"
+            canvas.create_rectangle(
+                x, y, x + size, y + size,
+                outline=color, width=2
+            )
+            canvas.create_text(
+                x + size // 2,
+                y + size // 2,
+                text=cameras[cam],
+                fill=color,
+                font=("Arial", 6)
+            )
+
+    # ======================
+    # WIN
+    # ======================
+    def win():
+        time.sleep(1)
+        ctypes.windll.user32.MessageBoxW(
+            0, "you got lucky.", "A Lil Game", 0x10
+        )
+        window.destroy()
+
+    # ======================
+    # ANIMATRONICS MOVE
+    # ======================
+    def move_animatronics():
+        nonlocal camera_disabled
+        while True:
+            moved = False
+            for a in positions:
+                if random.random() < horror_intensity(hour):
+                    positions[a] = random.randint(0, 4)
+                    moved = True
+
+            if moved:
+                camera_disabled = True
+                canvas.delete("all")
+                canvas.create_rectangle(0, 0, 320, 240, fill="gray")
+                window.update()
+                time.sleep(random.uniform(0.3, 0.6))
+                camera_disabled = False
+
+            time.sleep(max(0.6, 3 - hour))
+
+    # ======================
+    # CAMERA UPDATE
+    # ======================
+    def check_camera():
+        nonlocal hour, click_count, power, door_timer, golden_freddy_spawned
+
+        if not cameras_open or camera_disabled:
+            return
+
+        click_count += 1
+        hour = min(click_count // 3 + 1, MAX_HOUR)
+
+        drain = 1 + doors["left"] + doors["right"]
+        power -= drain
+        if power <= 0:
+            info.config(text="POWER OUT")
+            window.after(1200, window.destroy)
+            return
+
+        power_label.config(text=f"Power: {power}%")
+
+        if doors["left"] and doors["right"]:
+            door_timer += 1
+            if door_timer > 10:
+                info.config(text="FREDDY GOT YOU.")
+                window.update()
+                time.sleep(1)
+                window.destroy()
+                return
+        else:
+            door_timer = 0
+
+        if not golden_freddy_spawned and random.randint(1, 1000) == 1:
+            golden_freddy_spawned = True
+            positions["golden_freddy"] = current_camera
+
+        canvas.delete("all")
+        draw_camera_map()
+
+        present = [a for a, p in positions.items() if p == current_camera]
+        hallucination = random.random() < horror_intensity(hour) / 2
+
+        if present or hallucination:
+            a = random.choice(present) if present else random.choice(animatronics[:-1])
+            canvas.create_rectangle(60, 30, 260, 210, fill=colors[a])
+            if hallucination:
+                canvas.create_text(160, 15, text="NOT REAL", fill="red")
+
+        if lights["left"] and view == "left":
+            canvas.create_rectangle(0, 0, 320, 240, outline="white", width=3)
+        if lights["right"] and view == "right":
+            canvas.create_rectangle(0, 0, 320, 240, outline="white", width=3)
+
+        info.config(text=glitch_text(f"Hour {hour} - {cameras[current_camera]}", hour))
+
+        if hour == MAX_HOUR and click_count >= MAX_HOUR * 3:
+            win()
+
+    # ======================
+    # VIEW CONTROLS
+    # ======================
+    def set_view(v):
+        nonlocal view
+        view = v
+        info.config(text=f"LOOKING {v.upper()}")
+
+    view_frame = tk.Frame(window, bg="black")
+    view_frame.pack(pady=5)
+
+    tk.Button(view_frame, text="◀ LEFT", command=lambda: set_view("left")).pack(side="left", padx=10)
+    tk.Button(view_frame, text="CENTER", command=lambda: set_view("center")).pack(side="left", padx=10)
+    tk.Button(view_frame, text="RIGHT ▶", command=lambda: set_view("right")).pack(side="left", padx=10)
+
+    # ======================
+    # DOORS & LIGHTS
+    # ======================
+    control_frame = tk.Frame(window, bg="black")
+    control_frame.pack(pady=5)
+
+    def toggle_door(side):
+        if view != side:
+            info.config(text="NOT FACING DOOR")
+            return
+        doors[side] = not doors[side]
+        check_camera()
+
+    def toggle_light(side):
+        if view != side:
+            info.config(text="NOT FACING LIGHT")
+            return
+        lights[side] = not lights[side]
+        check_camera()
+
+    tk.Button(control_frame, text="Left Door", command=lambda: toggle_door("left")).pack(side="left", padx=10)
+    tk.Button(control_frame, text="Right Door", command=lambda: toggle_door("right")).pack(side="left", padx=10)
+    tk.Button(control_frame, text="Left Light", command=lambda: toggle_light("left")).pack(side="left", padx=10)
+    tk.Button(control_frame, text="Right Light", command=lambda: toggle_light("right")).pack(side="left", padx=10)
+
+    # ======================
+    # CAMERA BAR + MAP
+    # ======================
+    cam_container = tk.Frame(window, bg="black")
+    cam_container.pack(side="bottom", fill="x")
+
+    cam_frame = tk.Frame(cam_container, bg="black")
+    cam_buttons = []
+
+    def select_camera(i):
+        nonlocal current_camera
+        current_camera = i
+        for b in cam_buttons:
+            b.config(bg="black", fg="white")
+        cam_buttons[i].config(bg="gray", fg="black")
+        check_camera()
+
+    cam_map = tk.Frame(cam_frame, bg="black")
+    cam_map.pack(pady=5)
+
+    layout = [
+        [0, 1],
+        [2, 3],
+        [4, None]
+    ]
+
+    for row in layout:
+        r = tk.Frame(cam_map, bg="black")
+        r.pack()
+        for cam in row:
+            if cam is None:
+                tk.Label(r, text="      ", bg="black").pack(side="left")
+            else:
+                b = tk.Button(
+                    r, text=cameras[cam],
+                    width=10, bg="black", fg="white",
+                    command=lambda i=cam: select_camera(i)
+                )
+                b.pack(side="left", padx=5, pady=3)
+                cam_buttons.append(b)
+
+    def toggle_cameras():
+        nonlocal cameras_open
+        cameras_open = not cameras_open
+        if cameras_open:
+            cam_frame.pack()
+            cam_buttons[current_camera].config(bg="gray", fg="black")
+            cam_toggle.config(text="Close Cameras")
+            check_camera()
+        else:
+            cam_frame.pack_forget()
+            canvas.delete("all")
+            cam_toggle.config(text="Open Cameras")
+
+    cam_toggle = tk.Button(cam_container, text="Open Cameras", command=toggle_cameras)
+    cam_toggle.pack(pady=5)
+
+    threading.Thread(target=move_animatronics, daemon=True).start()
+    window.mainloop()
+
+# ======================
+# MENU
+# ======================
+menu = tk.Tk()
+menu.title("A Lil Game")
+menu.geometry("800x600")
+menu.configure(bg="black")
+
+tk.Label(menu, text="v1.0", fg="white", bg="black").place(relx=1, rely=1, anchor="se", x=-10, y=-10)
+
+play = tk.Label(menu, text="Play", fg="white", bg="black", font=("Arial", 24))
+play.place(relx=0, rely=0.5, anchor="w")
+
+play.bind("<Enter>", lambda e: play.config(fg="yellow"))
+play.bind("<Leave>", lambda e: play.config(fg="white"))
+play.bind("<Button-1>", lambda e: [menu.destroy(), run_game()])
+
+def settings():
+    s = tk.Toplevel(menu)
+    s.title("Settings")
+    s.geometry("300x150")
+    s.configure(bg="black")
+    tk.Label(s, text="Audio Volume", fg="white", bg="black").pack(pady=10)
+    tk.Scale(s, from_=0, to=100, orient="horizontal").pack()
+
+def discord():
+    webbrowser.open("https://discord.gg/ZZsRSk2xkk")
+
+tk.Button(menu, text="Settings", command=settings).place(x=20, y=380)
+tk.Button(menu, text="Discord Server", command=discord).place(x=20, y=430)
+
+menu.mainloop()
