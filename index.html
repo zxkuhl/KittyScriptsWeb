@@ -543,6 +543,8 @@
             box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
             animation: slideUpBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
+            z-index: 1001;
+            pointer-events: auto;
         }
         
         .popup-content::before {
@@ -577,6 +579,8 @@
             font-family: 'Syne', sans-serif;
             font-size: 1rem;
             transition: all 0.3s;
+            position: relative;
+            z-index: 1001;
         }
         
         .popup input:focus,
@@ -927,6 +931,7 @@
         document.getElementById('addScriptBtn').addEventListener('click', () => {
             actionType = 'add';
             showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
         });
 
         // Password Confirmation
@@ -1033,6 +1038,7 @@
             pendingDeleteKey = key;
             actionType = 'delete';
             showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
         };
 
         // Render Scripts from Firebase
