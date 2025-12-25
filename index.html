@@ -45,37 +45,53 @@ body {
 
 .content { text-align: center; margin-top: 40px; }
 
-.script-card {
-    background: #111;
-    border: 1px solid #222;
-    padding: 20px;
-    margin: 15px auto;
-    width: 320px;
-    border-radius: 10px;
-}
-
-.script-card button {
-    margin-top: 10px;
-    padding: 8px 15px;
-    background: #5865F2;
-    border: none;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
+.script-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 360px;
+    margin: auto;
 }
 
 .add-btn {
-    font-size: 30px;
+    font-size: 26px;
     background: #5865F2;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: none;
     color: white;
     cursor: pointer;
 }
 
-/* POPUPS */
+.script-card {
+    background: #111;
+    border: 1px solid #222;
+    padding: 15px;
+    margin: 15px auto;
+    width: 360px;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.script-card pre {
+    background: #0b0b0b;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+.script-card button {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #5865F2;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 6px;
+}
+
 .popup {
     position: fixed;
     inset: 0;
@@ -110,9 +126,8 @@ body {
         <div class="tab active" onclick="showTab('main')">Main</div>
         <div class="tab" onclick="showTab('scripts')">Scripts</div>
     </div>
-    <button class="discord-btn" onclick="window.location.href='https://discord.gg/KPUPp4m9pJ'">
-        Discord
-    </button>
+    <button class="discord-btn"
+    onclick="window.location.href='https://discord.gg/KPUPp4m9pJ'">Discord</button>
 </div>
 
 <div class="content">
@@ -124,8 +139,10 @@ body {
     </div>
 
     <div id="scriptsTab" style="display:none;">
-        <h2>Scripts</h2>
-        <button class="add-btn" onclick="openPasswordPopup()">+</button>
+        <div class="script-header">
+            <h2>Scripts</h2>
+            <button class="add-btn" onclick="openPassword('add')">+</button>
+        </div>
         <div id="scriptsContainer"></div>
     </div>
 </div>
@@ -133,9 +150,9 @@ body {
 <!-- PASSWORD POPUP -->
 <div class="popup" id="passwordPopup">
     <div class="popup-content">
-        <h3>Admin Login</h3>
-        <input type="password" id="adminPass" placeholder="Password">
-        <button onclick="checkPassword()">Enter</button>
+        <h3>Admin Password</h3>
+        <input type="password" id="adminPass">
+        <button onclick="confirmPassword()">Confirm</button>
     </div>
 </div>
 
@@ -149,10 +166,9 @@ body {
     </div>
 </div>
 
-<!-- FIREBASE + LOGIC -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
@@ -167,20 +183,32 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const ADMIN_PASSWORDS = ["i miss m.", "avalarson"];
+let actionType = null;
+let pendingDeleteKey = null;
 
-window.showTab = (tab) => {
+window.showTab = tab => {
     mainTab.style.display = tab === "main" ? "block" : "none";
     scriptsTab.style.display = tab === "scripts" ? "block" : "none";
 };
 
-window.openPasswordPopup = () => passwordPopup.style.display = "flex";
-window.checkPassword = () => {
+window.openPassword = type => {
+    actionType = type;
+    passwordPopup.style.display = "flex";
+};
+
+window.confirmPassword = () => {
     if (!ADMIN_PASSWORDS.includes(adminPass.value)) {
         alert("Wrong password");
         return;
     }
     passwordPopup.style.display = "none";
-    addPopup.style.display = "flex";
+    adminPass.value = "";
+
+    if (actionType === "add") addPopup.style.display = "flex";
+    if (actionType === "delete") {
+        remove(ref(db, "scripts/" + pendingDeleteKey));
+        pendingDeleteKey = null;
+    }
 };
 
 window.addScript = () => {
@@ -188,21 +216,34 @@ window.addScript = () => {
         name: scriptName.value,
         code: scriptCode.value
     });
+    scriptName.value = "";
+    scriptCode.value = "";
     addPopup.style.display = "none";
+};
+
+window.copyText = text => {
+    navigator.clipboard.writeText(text).then(() =>
+        alert("Copied to clipboard!")
+    );
+};
+
+window.requestDelete = key => {
+    pendingDeleteKey = key;
+    openPassword("delete");
 };
 
 onValue(ref(db, "scripts"), snap => {
     scriptsContainer.innerHTML = "";
     snap.forEach(child => {
+        const k = child.key;
         const s = child.val();
         scriptsContainer.innerHTML += `
-            <div class="script-card">
-                <strong>${s.name}</strong>
-                <p>${s.code}</p>
-                <button onclick="navigator.clipboard.writeText('${s.code}')">
-                    Copy Script
-                </button>
-            </div>`;
+        <div class="script-card">
+            <strong>${s.name}</strong>
+            <pre>${s.code}</pre>
+            <button onclick="copyText(\`${s.code.replace(/`/g,"\\`")}\`)">Copy</button>
+            <button onclick="requestDelete('${k}')">Delete</button>
+        </div>`;
     });
 });
 </script>
