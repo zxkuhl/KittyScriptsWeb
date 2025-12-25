@@ -611,6 +611,7 @@
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto; /* Ensure buttons are clickable */
         }
         
         .confirm-btn {
@@ -999,15 +1000,13 @@
             clearInputs();
         });
 
-        // Copy Script Code - FIXED VERSION
+        // Copy Script Code
         window.copyScript = async (code) => {
             try {
-                // Try modern clipboard API first
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(code);
                     showToast('Code copied to clipboard!', 'success');
                 } else {
-                    // Fallback for older browsers or non-HTTPS
                     const textArea = document.createElement('textarea');
                     textArea.value = code;
                     textArea.style.position = 'fixed';
@@ -1065,7 +1064,6 @@
                 scriptCard.style.animationDelay = `${delay}s`;
                 delay += 0.05;
                 
-                // Store the code in a data attribute to avoid escaping issues
                 scriptCard.dataset.code = script.code;
                 
                 scriptCard.innerHTML = `
@@ -1084,7 +1082,6 @@
                 scriptsContainer.appendChild(scriptCard);
             });
             
-            // Add event listeners to buttons
             document.querySelectorAll('[data-action="copy"]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const card = e.target.closest('.script-card');
@@ -1113,23 +1110,24 @@
             });
         });
 
-        // Keyboard shortcuts
+        // Enhanced keyboard support
         document.addEventListener('keydown', (e) => {
+            // Escape closes any open popup
             if (e.key === 'Escape') {
                 if (passwordPopup.classList.contains('show')) {
-                    hidePopup(passwordPopup);
-                    clearInputs();
-                }
-                if (addPopup.classList.contains('show')) {
-                    hidePopup(addPopup);
-                    clearInputs();
+                    document.getElementById('cancelPasswordBtn').click();
+                } else if (addPopup.classList.contains('show')) {
+                    document.getElementById('cancelAddBtn').click();
                 }
             }
-            
+
+            // Enter triggers confirm in password popup (anywhere except textarea in add popup)
             if (e.key === 'Enter' && !e.shiftKey) {
                 if (passwordPopup.classList.contains('show')) {
+                    e.preventDefault();
                     document.getElementById('confirmPasswordBtn').click();
-                } else if (addPopup.classList.contains('show') && e.target.id !== 'scriptCode') {
+                } else if (addPopup.classList.contains('show') && document.activeElement !== scriptCode) {
+                    e.preventDefault();
                     document.getElementById('addBtn').click();
                 }
             }
