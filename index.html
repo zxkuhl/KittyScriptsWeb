@@ -49,7 +49,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 360px;
+    max-width: 380px;
     margin: auto;
 }
 
@@ -69,7 +69,7 @@ body {
     border: 1px solid #222;
     padding: 15px;
     margin: 15px auto;
-    width: 360px;
+    width: 380px;
     border-radius: 10px;
     text-align: left;
 }
@@ -79,6 +79,7 @@ body {
     padding: 10px;
     border-radius: 6px;
     overflow-x: auto;
+    white-space: pre-wrap;
 }
 
 .script-card button {
@@ -221,10 +222,11 @@ window.addScript = () => {
     addPopup.style.display = "none";
 };
 
-window.copyText = text => {
-    navigator.clipboard.writeText(text).then(() =>
-        alert("Copied to clipboard!")
-    );
+window.copyFromPre = id => {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text)
+        .then(() => alert("Copied to clipboard!"))
+        .catch(() => alert("Copy failed"));
 };
 
 window.requestDelete = key => {
@@ -240,8 +242,8 @@ onValue(ref(db, "scripts"), snap => {
         scriptsContainer.innerHTML += `
         <div class="script-card">
             <strong>${s.name}</strong>
-            <pre>${s.code}</pre>
-            <button onclick="copyText(\`${s.code.replace(/`/g,"\\`")}\`)">Copy</button>
+            <pre id="script-${k}">${s.code}</pre>
+            <button onclick="copyFromPre('script-${k}')">Copy</button>
             <button onclick="requestDelete('${k}')">Delete</button>
         </div>`;
     });
