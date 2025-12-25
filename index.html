@@ -5,7 +5,7 @@
     <title>KittyScripts</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png"
+    <link rel="icon" type="image/webp"
           href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -129,20 +129,20 @@
     </div>
 
     <div class="content">
+        <!-- MAIN TAB -->
         <div id="mainTab">
             <h1>KittyScripts</h1>
             <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
             <div class="subtitle">Script hub • simple • clean</div>
         </div>
 
+        <!-- SCRIPTS TAB -->
         <div id="scriptsTab" style="display:none;">
             <h2>Scripts</h2>
             <div class="script-card">
                 <strong>UNTITLED TAG GAME SCRIPT ↓↓</strong>
-                <p>loadstring(game:HttpGet("https://pastebin.com/raw/LsYxJ0kS"))()</p>
-                <button onclick="navigator.clipboard.writeText('print(\"Hello KittyScripts\")')">
-                    Copy Script
-                </button>
+                <p id="script1">loadstring(game:HttpGet("https://pastebin.com/raw/LsYxJ0kS"))()</p>
+                <button onclick="copyScript('script1')">Copy Script</button>
             </div>
         </div>
     </div>
@@ -160,6 +160,13 @@
             tab === 'main'
                 ? document.querySelectorAll('.tab')[0].classList.add('active')
                 : document.querySelectorAll('.tab')[1].classList.add('active');
+        }
+
+        function copyScript(scriptId) {
+            const scriptText = document.getElementById(scriptId).innerText;
+            navigator.clipboard.writeText(scriptText)
+                .then(() => alert("Script copied to clipboard!"))
+                .catch(err => console.error("Failed to copy script:", err));
         }
     </script>
 
