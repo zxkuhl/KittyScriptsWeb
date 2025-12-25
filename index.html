@@ -922,16 +922,19 @@
         });
 
         // Copy Script Code
-        window.copyScript = (code) => {
-            navigator.clipboard.writeText(code)
-                .then(() => {
-                    showNotification('Code copied to clipboard!', 'success');
-                })
-                .catch(err => {
-                    showNotification('Failed to copy code', 'error');
-                    console.error('Copy failed:', err);
-                });
-        };
+        // Inside your script rendering loop
+const copyBtn = document.createElement('button');
+copyBtn.className = 'copy-btn';
+copyBtn.textContent = 'Copy';
+copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(script.code)
+        .then(() => showNotification('Code copied to clipboard!', 'success'))
+        .catch(err => {
+            showNotification('Failed to copy code', 'error');
+            console.error('Copy failed:', err);
+        });
+});
+scriptCard.querySelector('.script-actions').appendChild(copyBtn);
 
         // Request Delete
         window.requestDelete = (key) => {
