@@ -1,184 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>KittyScripts</title>
+<meta charset="UTF-8">
+<title>KittyScripts</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/webp"
-          href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
+<link rel="icon" type="image/webp"
+href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            margin: 0;
-            background: #0b0b0b;
-            font-family: Arial, Helvetica, sans-serif;
-            color: white;
-        }
+<style>
+body {
+    margin: 0;
+    background: #0b0b0b;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
 
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #111;
-            padding: 10px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #111;
+    padding: 10px 20px;
+}
 
-        .tabs {
-            display: flex;
-        }
+.tabs { display: flex; }
 
-        .tab {
-            padding: 10px 20px;
-            margin-right: 10px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+.tab.active { background: #5865F2; }
 
-        .tab:hover {
-            background: #222;
-        }
+.discord-btn {
+    background: #5865F2;
+    border: none;
+    padding: 10px 15px;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
 
-        .tab.active {
-            background: #5865F2;
-            box-shadow: 0 0 10px rgba(88, 101, 242, 0.6);
-        }
+.content { text-align: center; margin-top: 40px; }
 
-        .discord-btn {
-            background-color: #5865F2;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(88, 101, 242, 0.6);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+.script-card {
+    background: #111;
+    border: 1px solid #222;
+    padding: 20px;
+    margin: 15px auto;
+    width: 320px;
+    border-radius: 10px;
+}
 
-        .discord-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(88, 101, 242, 0.9);
-        }
+.script-card button {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #5865F2;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
 
-        .content {
-            text-align: center;
-            margin-top: 40px;
-        }
+.add-btn {
+    font-size: 30px;
+    background: #5865F2;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
 
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-        }
+/* POPUPS */
+.popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
 
-        img {
-            width: 220px;
-            height: auto;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
-        }
+.popup-content {
+    background: #111;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+}
 
-        .subtitle {
-            margin-top: 20px;
-            opacity: 0.75;
-            font-size: 1rem;
-        }
-
-        .script-card {
-            background: #111;
-            border: 1px solid #222;
-            padding: 20px;
-            margin: 20px auto;
-            width: 300px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(255,255,255,0.1);
-        }
-
-        .script-card button {
-            margin-top: 10px;
-            padding: 8px 15px;
-            background: #5865F2;
-            border: none;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-    </style>
+.popup input, .popup textarea {
+    width: 100%;
+    margin: 8px 0;
+    padding: 8px;
+    background: #222;
+    border: none;
+    color: white;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="navbar">
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('main')">Main</div>
-            <div class="tab" onclick="showTab('scripts')">Scripts</div>
-        </div>
+<div class="navbar">
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('main')">Main</div>
+        <div class="tab" onclick="showTab('scripts')">Scripts</div>
+    </div>
+    <button class="discord-btn" onclick="window.location.href='https://discord.gg/KPUPp4m9pJ'">
+        Discord
+    </button>
+</div>
 
-        <button class="discord-btn"
-            onclick="window.location.href='https://discord.gg/KPUPp4m9pJ'">
-            Discord
-        </button>
+<div class="content">
+    <div id="mainTab">
+        <h1>KittyScripts</h1>
+        <img width="220"
+        src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
+        <p>Script hub • simple • clean</p>
     </div>
 
-    <div class="content">
-        <!-- MAIN TAB -->
-        <div id="mainTab">
-            <h1>KittyScripts</h1>
-            <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
-            <div class="subtitle">Script hub • simple • clean</div>
-        </div>
-
-        <!-- SCRIPTS TAB -->
-        <div id="scriptsTab" style="display:none;">
-            <h2>Scripts</h2>
-            
-            <!-- FIRST SCRIPT -->
-            <div class="script-card">
-                <strong>UNTITLED TAG GAME SCRIPT ↓↓</strong>
-                <p id="script1">loadstring(game:HttpGet("https://pastebin.com/raw/LsYxJ0kS"))()</p>
-                <button onclick="copyScript('script1')">Copy Script</button>
-            </div>
-            
-            <!-- SECOND SCRIPT -->
-            <div class="script-card">
-                <strong>UNIVERSAL SCRIPT.  SCRIPT NAME = ARK ↓↓</strong>
-                <p id="script2">loadstring(game:HttpGet("https://raw.githubusercontent.com/zxkuhl/ARK_HUB/refs/heads/main/ARK"))()</p>
-                <button onclick="copyScript('script2')">Copy Script</button>
-            </div>
-            
-        </div>
+    <div id="scriptsTab" style="display:none;">
+        <h2>Scripts</h2>
+        <button class="add-btn" onclick="openPasswordPopup()">+</button>
+        <div id="scriptsContainer"></div>
     </div>
+</div>
 
-    <script>
-        function showTab(tab) {
-            document.getElementById('mainTab').style.display =
-                tab === 'main' ? 'block' : 'none';
-            document.getElementById('scriptsTab').style.display =
-                tab === 'scripts' ? 'block' : 'none';
+<!-- PASSWORD POPUP -->
+<div class="popup" id="passwordPopup">
+    <div class="popup-content">
+        <h3>Admin Login</h3>
+        <input type="password" id="adminPass" placeholder="Password">
+        <button onclick="checkPassword()">Enter</button>
+    </div>
+</div>
 
-            document.querySelectorAll('.tab')
-                .forEach(t => t.classList.remove('active'));
+<!-- ADD SCRIPT POPUP -->
+<div class="popup" id="addPopup">
+    <div class="popup-content">
+        <h3>Add Script</h3>
+        <input id="scriptName" placeholder="Script name">
+        <textarea id="scriptCode" placeholder="Script code"></textarea>
+        <button onclick="addScript()">Add</button>
+    </div>
+</div>
 
-            tab === 'main'
-                ? document.querySelectorAll('.tab')[0].classList.add('active')
-                : document.querySelectorAll('.tab')[1].classList.add('active');
-        }
+<!-- FIREBASE + LOGIC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        function copyScript(scriptId) {
-            const scriptText = document.getElementById(scriptId).innerText;
-            navigator.clipboard.writeText(scriptText)
-                .then(() => alert("Script copied to clipboard!"))
-                .catch(err => console.error("Failed to copy script:", err));
-        }
-    </script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
+  authDomain: "kittyscriptsweb.firebaseapp.com",
+  projectId: "kittyscriptsweb",
+  storageBucket: "kittyscriptsweb.appspot.com",
+  messagingSenderId: "866548422450",
+  appId: "1:866548422450:web:a327c122f0d8e57fa1e92b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const ADMIN_PASSWORDS = ["i miss m.", "avalarson"];
+
+window.showTab = (tab) => {
+    mainTab.style.display = tab === "main" ? "block" : "none";
+    scriptsTab.style.display = tab === "scripts" ? "block" : "none";
+};
+
+window.openPasswordPopup = () => passwordPopup.style.display = "flex";
+window.checkPassword = () => {
+    if (!ADMIN_PASSWORDS.includes(adminPass.value)) {
+        alert("Wrong password");
+        return;
+    }
+    passwordPopup.style.display = "none";
+    addPopup.style.display = "flex";
+};
+
+window.addScript = () => {
+    push(ref(db, "scripts"), {
+        name: scriptName.value,
+        code: scriptCode.value
+    });
+    addPopup.style.display = "none";
+};
+
+onValue(ref(db, "scripts"), snap => {
+    scriptsContainer.innerHTML = "";
+    snap.forEach(child => {
+        const s = child.val();
+        scriptsContainer.innerHTML += `
+            <div class="script-card">
+                <strong>${s.name}</strong>
+                <p>${s.code}</p>
+                <button onclick="navigator.clipboard.writeText('${s.code}')">
+                    Copy Script
+                </button>
+            </div>`;
+    });
+});
+</script>
 
 </body>
 </html>
