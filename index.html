@@ -327,6 +327,34 @@
             letter-spacing: -0.02em;
         }
         
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .search-input {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 200px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            width: 250px;
+        }
+        
+        .search-input::placeholder {
+            color: var(--text-dim);
+        }
+        
         .add-btn {
             width: 54px;
             height: 54px;
@@ -762,6 +790,20 @@
                 left: 1rem;
                 bottom: 1rem;
             }
+            
+            .header-left {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .search-input:focus {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -802,7 +844,10 @@
         <!-- Scripts Tab -->
         <section id="scriptsTab" style="display: none;">
             <div class="script-header">
-                <h2>Scripts</h2>
+                <div class="header-left">
+                    <h2>Scripts</h2>
+                    <input id="searchInput" class="search-input" placeholder="Search scripts..." type="search">
+                </div>
                 <button class="add-btn" id="addScriptBtn" aria-label="Add new script">+</button>
             </div>
             <div id="scriptsContainer"></div>
@@ -876,6 +921,7 @@
         const scriptName = document.getElementById('scriptName');
         const scriptCode = document.getElementById('scriptCode');
         const toast = document.getElementById('toast');
+        const searchInput = document.getElementById('searchInput');
 
         // Utility Functions
         function showPopup(popup) {
@@ -914,6 +960,20 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
+        }
+
+        function filterScripts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.script-card');
+            cards.forEach(card => {
+                const name = card.querySelector('strong').textContent.toLowerCase();
+                const code = card.dataset.code.toLowerCase();
+                if (name.includes(searchTerm) || code.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
 
         // Tab Navigation
@@ -1097,7 +1157,12 @@
                     requestDelete(key);
                 });
             });
+            
+            filterScripts();
         });
+
+        // Search functionality
+        searchInput.addEventListener('input', filterScripts);
 
         // Close popups on background click
         [passwordPopup, addPopup].forEach(popup => {
@@ -1135,4 +1200,4 @@
         });
     </script>
 </body>
-</html>
+    </html>
