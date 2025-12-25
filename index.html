@@ -6,7 +6,7 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/png"
-          href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/IMG_0729.png">
+          href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/refs/heads/main/IMG_0729.png">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,44 +18,25 @@
             color: white;
         }
 
-        /* ===== NAVBAR ===== */
         .navbar {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             background: #111;
             padding: 10px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo img {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(255,255,255,0.4);
-        }
-
-        .logo span {
-            font-size: 1.4rem;
-            font-weight: bold;
-        }
-
         .tabs {
             display: flex;
-            gap: 10px;
         }
 
         .tab {
-            padding: 8px 18px;
+            padding: 10px 20px;
+            margin-right: 10px;
             cursor: pointer;
             border-radius: 6px;
             transition: 0.2s;
@@ -67,92 +48,75 @@
 
         .tab.active {
             background: #5865F2;
-            box-shadow: 0 0 10px rgba(88,101,242,0.7);
+            box-shadow: 0 0 10px rgba(88, 101, 242, 0.6);
         }
 
         .discord-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #5865F2;
+            background-color: #5865F2;
             color: white;
             border: none;
-            padding: 8px 14px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 10px rgba(88,101,242,0.6);
-            transition: 0.2s;
-        }
-
-        .discord-btn img {
-            width: 22px;
-            height: 22px;
+            box-shadow: 0 0 10px rgba(88, 101, 242, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .discord-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 20px rgba(88,101,242,0.9);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.9);
         }
 
-        /* ===== CONTENT ===== */
         .content {
             text-align: center;
-            margin-top: 50px;
+            margin-top: 40px;
         }
 
         h1 {
             font-size: 3rem;
             margin-bottom: 20px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.6);
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
         }
 
-        .main-logo {
+        img {
             width: 220px;
+            height: auto;
             border-radius: 20px;
-            box-shadow: 0 0 30px rgba(255,255,255,0.35);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
         }
 
         .subtitle {
             margin-top: 20px;
             opacity: 0.75;
+            font-size: 1rem;
         }
 
-        /* ===== SCRIPT CARD ===== */
         .script-card {
             background: #111;
             border: 1px solid #222;
             padding: 20px;
-            margin: 30px auto;
-            width: 320px;
+            margin: 20px auto;
+            width: 300px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(255,255,255,0.1);
         }
 
         .script-card button {
-            margin-top: 12px;
-            padding: 8px 16px;
+            margin-top: 10px;
+            padding: 8px 15px;
             background: #5865F2;
             border: none;
             color: white;
             border-radius: 6px;
             cursor: pointer;
         }
-
-        .script-card button:hover {
-            box-shadow: 0 0 15px rgba(88,101,242,0.8);
-        }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <div class="navbar">
-        <div class="logo">
-            <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/IMG_0729.png" alt="Logo">
-            <span>KittyScripts</span>
-        </div>
-
         <div class="tabs">
             <div class="tab active" onclick="showTab('main')">Main</div>
             <div class="tab" onclick="showTab('scripts')">Scripts</div>
@@ -160,51 +124,42 @@
 
         <button class="discord-btn"
             onclick="window.location.href='https://discord.gg/KPUPp4m9pJ'">
-            <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/discord.png" alt="Discord">
             Discord
         </button>
     </div>
 
-    <!-- CONTENT -->
     <div class="content">
-
-        <!-- MAIN TAB -->
         <div id="mainTab">
             <h1>KittyScripts</h1>
-            <img class="main-logo"
-                 src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/IMG_0729.png">
+            <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/refs/heads/main/IMG_0729.png">
             <div class="subtitle">Script hub • simple • clean</div>
         </div>
 
-        <!-- SCRIPTS TAB -->
         <div id="scriptsTab" style="display:none;">
             <h2>Example Script</h2>
-
             <div class="script-card">
                 <strong>SuperCoolScript</strong>
                 <p>Example placeholder script.</p>
-                <button onclick="copyScript()">Copy Script</button>
+                <button onclick="navigator.clipboard.writeText('print(\"Hello KittyScripts\")')">
+                    Copy Script
+                </button>
             </div>
         </div>
-
     </div>
 
     <script>
         function showTab(tab) {
-            document.getElementById("mainTab").style.display =
-                tab === "main" ? "block" : "none";
-            document.getElementById("scriptsTab").style.display =
-                tab === "scripts" ? "block" : "none";
+            document.getElementById('mainTab').style.display =
+                tab === 'main' ? 'block' : 'none';
+            document.getElementById('scriptsTab').style.display =
+                tab === 'scripts' ? 'block' : 'none';
 
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            tab === "main"
-                ? document.querySelectorAll(".tab")[0].classList.add("active")
-                : document.querySelectorAll(".tab")[1].classList.add("active");
-        }
+            document.querySelectorAll('.tab')
+                .forEach(t => t.classList.remove('active'));
 
-        function copyScript() {
-            navigator.clipboard.writeText('print("Hello KittyScripts")');
-            alert("Script copied!");
+            tab === 'main'
+                ? document.querySelectorAll('.tab')[0].classList.add('active')
+                : document.querySelectorAll('.tab')[1].classList.add('active');
         }
     </script>
 
