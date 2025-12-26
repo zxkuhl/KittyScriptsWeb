@@ -824,15 +824,6 @@
             box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
         }
 
-        .script-thumbnail {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 1.25rem;
-            border: 1px solid var(--border-subtle);
-        }
-        
         .script-card-header {
             display: flex;
             justify-content: space-between;
@@ -1042,11 +1033,6 @@
             transition: all 0.3s;
             position: relative;
             z-index: 1001;
-        }
-
-        .popup input[type="file"] {
-            padding: 0.5rem;
-            cursor: pointer;
         }
         
         .popup input:focus,
@@ -1520,9 +1506,6 @@
             <input id="scriptName" placeholder="Script name" autocomplete="off">
             <textarea id="scriptCode" placeholder="Paste your script code here..."></textarea>
             
-            <label style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Thumbnail Image (optional)</label>
-            <input type="file" id="thumbnailInput" accept="image/*" style="margin-bottom: 1.25rem;">
-            
             <div class="checkbox-group">
                 <div class="checkbox-item" id="universalCheckbox">
                     <label>Universal</label>
@@ -1570,7 +1553,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, push, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+        // import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js"; // Removed Storage import
 
         const firebaseConfig = {
             apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
@@ -1583,7 +1566,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const storage = getStorage(app);
+        // const storage = getStorage(app); // Removed Storage initialization
 
         const ADMIN_PASSWORDS = ["i miss m.", "avalarson"];
         
@@ -1595,8 +1578,8 @@
         let previousScriptState = null;
         let selectedLogs = new Set();
         let isEditMode = false;
-        let thumbnailFile = null;
-        let currentThumbnailUrl = null;
+        // let thumbnailFile = null; // Removed
+        // let currentThumbnailUrl = null; // Removed
         
         let filters = {
             universal: 'any',
@@ -1614,7 +1597,7 @@
         const adminPass = document.getElementById('adminPass');
         const scriptName = document.getElementById('scriptName');
         const scriptCode = document.getElementById('scriptCode');
-        const thumbnailInput = document.getElementById('thumbnailInput');
+        // const thumbnailInput = document.getElementById('thumbnailInput'); // Removed
         const toast = document.getElementById('toast');
         const searchInput = document.getElementById('searchInput');
         const filterBtn = document.getElementById('filterBtn');
@@ -1641,21 +1624,7 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // Thumbnail handling
-        thumbnailInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                thumbnailFile = e.target.files[0];
-            }
-        });
-
-        async function uploadThumbnail(file, scriptKey) {
-            if (!file) return null;
-            
-            const fileRef = storageRef(storage, `thumbnails/${scriptKey}/${file.name}`);
-            await uploadBytes(fileRef, file);
-            const downloadURL = await getDownloadURL(fileRef);
-            return downloadURL;
-        }
+        // Thumbnail handling - REMOVED
 
         function addLog(action, scriptName, details = '') {
             const timestamp = Date.now();
@@ -1883,9 +1852,9 @@
             adminPass.value = '';
             scriptName.value = '';
             scriptCode.value = '';
-            thumbnailInput.value = '';
-            thumbnailFile = null;
-            currentThumbnailUrl = null;
+            // thumbnailInput.value = ''; // Removed
+            // thumbnailFile = null; // Removed
+            // currentThumbnailUrl = null; // Removed
             isUniversal = false;
             hasKeySystem = false;
             editingScriptKey = null;
@@ -2103,11 +2072,9 @@
             // Disable button to prevent double-clicks
             const addBtnElement = document.getElementById('addBtn');
             addBtnElement.disabled = true;
-            addBtnElement.textContent = 'Uploading...';
+            addBtnElement.textContent = 'Processing...'; // Changed text to reflect no upload
             
             try {
-                let thumbnailUrl = currentThumbnailUrl;
-                
                 // Create script data object
                 const scriptData = {
                     name: name,
@@ -2119,14 +2086,6 @@
                 
                 if (editingScriptKey) {
                     // EDIT MODE
-                    if (thumbnailFile) {
-                        thumbnailUrl = await uploadThumbnail(thumbnailFile, editingScriptKey);
-                    }
-                    
-                    if (thumbnailUrl) {
-                        scriptData.thumbnail = thumbnailUrl;
-                    }
-                    
                     await update(ref(db, 'scripts/' + editingScriptKey), scriptData);
                     
                     // Log tag changes
@@ -2149,13 +2108,6 @@
                 } else {
                     // CREATE MODE
                     const newScriptRef = push(ref(db, 'scripts'));
-                    const newKey = newScriptRef.key;
-                    
-                    if (thumbnailFile) {
-                        thumbnailUrl = await uploadThumbnail(thumbnailFile, newKey);
-                        scriptData.thumbnail = thumbnailUrl;
-                    }
-                    
                     await update(newScriptRef, scriptData);
                     addLog('created', name);
                     showToast('Script added successfully!', 'success');
@@ -2213,7 +2165,7 @@
                 isUniversal: scriptData.isUniversal,
                 hasKeySystem: scriptData.hasKeySystem
             };
-            currentThumbnailUrl = scriptData.thumbnail || null;
+            // currentThumbnailUrl = scriptData.thumbnail || null; // Removed
             showPopup(passwordPopup);
             window.tempEditData = scriptData;
             setTimeout(() => adminPass.focus(), 100);
@@ -2224,7 +2176,7 @@
             scriptCode.value = scriptData.code;
             isUniversal = scriptData.isUniversal || false;
             hasKeySystem = scriptData.hasKeySystem || false;
-            currentThumbnailUrl = scriptData.thumbnail || null;
+            // currentThumbnailUrl = scriptData.thumbnail || null; // Removed
             
             if (isUniversal) universalCheckbox.classList.add('checked');
             if (hasKeySystem) keySystemCheckbox.classList.add('checked');
@@ -2275,13 +2227,12 @@
                     badges += '<span class="badge key-system">Key System</span>';
                 }
                 
-                let thumbnailHtml = '';
-                if (script.thumbnail) {
-                    thumbnailHtml = `<img src="${script.thumbnail}" alt="${escapeHtml(script.name)}" class="script-thumbnail">`;
-                }
+                // let thumbnailHtml = ''; // Removed
+                // if (script.thumbnail) { // Removed
+                //     thumbnailHtml = `<img src="${script.thumbnail}" alt="${escapeHtml(script.name)}" class="script-thumbnail">`; // Removed
+                // }
                 
                 scriptCard.innerHTML = `
-                    ${thumbnailHtml}
                     <div class="script-card-header">
                         <strong>${escapeHtml(script.name)}</strong>
                         <div class="script-badges">
@@ -2322,7 +2273,7 @@
                         code: card.dataset.code,
                         isUniversal: card.dataset.universal === 'true',
                         hasKeySystem: card.dataset.keysystem === 'true',
-                        thumbnail: card.querySelector('.script-thumbnail')?.src || null
+                        // thumbnail: card.querySelector('.script-thumbnail')?.src || null // Removed
                     };
                     requestEdit(key, scriptData);
                 });
