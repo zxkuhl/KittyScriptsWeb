@@ -5,7 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KittyScripts - Script Hub</title>
     
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Script hub for Roblox scripts - simple, clean, and powerful">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KittyScripts">
+    
+    <!-- Icons -->
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -281,6 +293,39 @@
             height: 20px;
             fill: white;
         }
+
+        .install-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            border: none;
+            padding: 0.625rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .install-btn.show {
+            display: flex;
+        }
+
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .install-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
         
         .content {
             max-width: 1400px;
@@ -359,6 +404,50 @@
                 0 30px 80px rgba(0, 0, 0, 0.6);
         }
         
+        .online-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .online-counter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .online-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .online-text {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .online-count {
+            font-weight: 800;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
         .tagline {
             font-size: 1.25rem;
             color: var(--text-muted);
@@ -378,46 +467,6 @@
         .tagline span:nth-child(3) { animation-delay: 0.4s; }
         .tagline span:nth-child(4) { animation-delay: 0.5s; color: var(--accent-bright); }
         .tagline span:nth-child(5) { animation-delay: 0.6s; }
-
-        .online-counter {
-            margin-top: 3rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-bright);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.7s backwards;
-        }
-
-        .online-indicator {
-            width: 12px;
-            height: 12px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: blink 2s ease-in-out infinite;
-            box-shadow: 0 0 12px var(--success);
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .online-count {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .online-label {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
         
         #scriptsTab, #logsTab {
             animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1314,15 +1363,13 @@
             }
 
             .online-counter {
-                padding: 0.875rem 1.5rem;
+                font-size: 0.85rem;
+                padding: 0.625rem 1.25rem;
             }
 
-            .online-count {
-                font-size: 1rem;
-            }
-
-            .online-label {
-                font-size: 0.875rem;
+            .online-dot {
+                width: 10px;
+                height: 10px;
             }
             
             #scriptsContainer {
@@ -1447,14 +1494,14 @@
         </svg>
         <svg class="sun-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
         </svg>
     </button>
 
@@ -1465,6 +1512,14 @@
             <div class="tab" data-tab="logs">Logs</div>
         </div>
         <div class="social-buttons">
+            <button class="install-btn" id="installBtn" aria-label="Install App">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </button>
             <button class="discord-icon-btn" onclick="window.open('https://discord.gg/KPUPp4m9pJ', '_blank')" aria-label="Discord">
                 <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
                     <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
@@ -1488,6 +1543,14 @@
                 <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp" 
                      alt="KittyScripts Logo">
             </div>
+            
+            <div class="online-counter">
+                <div class="online-dot"></div>
+                <span class="online-text">
+                    <span class="online-count" id="onlineCount">...</span> online
+                </span>
+            </div>
+
             <p class="tagline">
                 <span>Script</span>
                 <span> hub</span>
@@ -1495,11 +1558,6 @@
                 <span> simple</span>
                 <span> • clean</span>
             </p>
-            <div class="online-counter">
-                <div class="online-indicator"></div>
-                <span class="online-count" id="onlineCount">0</span>
-                <span class="online-label">users online</span>
-            </div>
         </section>
 
         <section id="scriptsTab" style="display: none;">
@@ -1633,7 +1691,6 @@
         let previousScriptState = null;
         let selectedLogs = new Set();
         let isEditMode = false;
-        let myConnectionId = null;
         
         let filters = {
             universal: 'any',
@@ -1679,38 +1736,22 @@
         });
 
         // Online Users Presence System
-        function setupPresence() {
-            const connectionsRef = ref(db, 'online');
-            const myConnectionRef = push(connectionsRef);
-            myConnectionId = myConnectionRef.key;
+        const myConnectionsRef = ref(db, `presence/${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+        const connectedRef = ref(db, '.info/connected');
+        
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                set(myConnectionsRef, true);
+                onDisconnect(myConnectionsRef).remove();
+            }
+        });
 
-            set(myConnectionRef, {
-                timestamp: serverTimestamp()
-            });
-
-            onDisconnect(myConnectionRef).remove();
-
-            // Listen for online users count
-            onValue(connectionsRef, (snapshot) => {
-                const count = snapshot.exists() ? snapshot.numChildren() : 0;
-                onlineCountElement.textContent = count;
-            });
-
-            // Cleanup old connections (older than 5 minutes)
-            setInterval(() => {
-                onValue(connectionsRef, (snapshot) => {
-                    const now = Date.now();
-                    snapshot.forEach((child) => {
-                        const data = child.val();
-                        if (data.timestamp && (now - data.timestamp > 5 * 60 * 1000)) {
-                            remove(ref(db, `online/${child.key}`));
-                        }
-                    });
-                }, { onlyOnce: true });
-            }, 60000); // Check every minute
-        }
-
-        setupPresence();
+        // Count online users
+        const presenceRef = ref(db, 'presence');
+        onValue(presenceRef, (snapshot) => {
+            const count = snapshot.exists() ? snapshot.numChildren() : 0;
+            onlineCountElement.textContent = count;
+        });
 
         function addLog(action, scriptName, details = '') {
             const timestamp = Date.now();
@@ -2399,6 +2440,152 @@
                 }
             }
         });
+
+        // PWA - Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA - Install Prompt
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            installBtn.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                return;
+            }
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                showToast('App installed successfully! 🎉', 'success');
+            }
+            
+            // Clear the deferredPrompt so it can only be used once
+            deferredPrompt = null;
+            // Hide the install button
+            installBtn.classList.remove('show');
+        });
+
+        // Hide install button if app is already installed
+        window.addEventListener('appinstalled', () => {
+            installBtn.classList.remove('show');
+            showToast('KittyScripts installed! 🎉', 'success');
+            deferredPrompt = null;
+        });
+
+        // Check if already running as installed PWA
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            console.log('Running as installed PWA');
+            installBtn.style.display = 'none';
+        }
     </script>
 </body>
 </html>
+{
+  "name": "KittyScripts",
+  "short_name": "KittyScripts",
+  "description": "Script hub for Roblox scripts - simple, clean, and powerful",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08080a",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "screenshots": []
+}
+const CACHE_NAME = 'kittyscripts-v1';
+const urlsToCache = [
+  '/',
+  '/index.html'
+];
+
+// Install event - cache resources
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+  self.skipWaiting();
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Fetch event - serve from cache, fallback to network
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+        
+        // Clone the request
+        const fetchRequest = event.request.clone();
+        
+        return fetch(fetchRequest).then((response) => {
+          // Check if valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          
+          // Clone the response
+          const responseToCache = response.clone();
+          
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          
+          return response;
+        });
+      })
+  );
+});
