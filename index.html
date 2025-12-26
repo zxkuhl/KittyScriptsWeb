@@ -378,16 +378,47 @@
         .tagline span:nth-child(3) { animation-delay: 0.4s; }
         .tagline span:nth-child(4) { animation-delay: 0.5s; color: var(--accent-bright); }
         .tagline span:nth-child(5) { animation-delay: 0.6s; }
-        
-        /* NEW STYLING for Online Counter */
-        #onlineCounter {
-            margin-top: 3rem; 
-            font-size: 1.5rem; 
-            color: var(--accent-bright); 
-            font-weight: 700; 
-            letter-spacing: 0.05em;
+
+        .online-counter {
+            margin-top: 3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.7s backwards;
         }
 
+        .online-indicator {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+            box-shadow: 0 0 12px var(--success);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .online-count {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .online-label {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        
         #scriptsTab, #logsTab {
             animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -595,10 +626,6 @@
         .logs-container::-webkit-scrollbar-thumb {
             background: var(--accent-primary);
             border-radius: 4px;
-        }
-        
-        .logs-container::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-bright);
         }
         
         .log-entry {
@@ -1285,6 +1312,18 @@
             #mainTab h1 {
                 font-size: 2.5rem;
             }
+
+            .online-counter {
+                padding: 0.875rem 1.5rem;
+            }
+
+            .online-count {
+                font-size: 1rem;
+            }
+
+            .online-label {
+                font-size: 0.875rem;
+            }
             
             #scriptsContainer {
                 grid-template-columns: 1fr;
@@ -1456,8 +1495,10 @@
                 <span> simple</span>
                 <span> • clean</span>
             </p>
-            <div id="onlineCounter" style="margin-top: 3rem; font-size: 1.5rem; color: var(--accent-bright); font-weight: 700; letter-spacing: 0.05em;">
-                Loading online users...
+            <div class="online-counter">
+                <div class="online-indicator"></div>
+                <span class="online-count" id="onlineCount">0</span>
+                <span class="online-label">users online</span>
             </div>
         </section>
 
@@ -1568,7 +1609,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, push, remove, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, push, remove, onValue, update, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
@@ -1592,6 +1633,7 @@
         let previousScriptState = null;
         let selectedLogs = new Set();
         let isEditMode = false;
+        let myConnectionId = null;
         
         let filters = {
             universal: 'any',
@@ -1623,8 +1665,7 @@
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const logsHeaderActions = document.getElementById('logsHeaderActions');
         const themeToggle = document.getElementById('themeToggle');
-        // NEW: Online Counter Element
-        const onlineCounter = document.getElementById('onlineCounter');
+        const onlineCountElement = document.getElementById('onlineCount');
 
         // Theme Toggle
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -1637,44 +1678,40 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- Online User Counter / Presence System ---
-        const connectedRef = ref(db, '.info/connected'); // Firebase built-in connection status
-        const presenceRef = ref(db, 'presence'); 
+        // Online Users Presence System
+        function setupPresence() {
+            const connectionsRef = ref(db, 'online');
+            const myConnectionRef = push(connectionsRef);
+            myConnectionId = myConnectionRef.key;
 
-        // 1. Generate a unique user ID for this session
-        const userId = Date.now().toString(36) + Math.random().toString(36).substring(2);
-        const userRef = ref(db, `presence/${userId}`);
+            set(myConnectionRef, {
+                timestamp: serverTimestamp()
+            });
 
-        // 2. Set up presence logic
-        onValue(connectedRef, (snapshot) => {
-            if (snapshot.val() === true) {
-                // A. Set up onDisconnect hook
-                // If the user disconnects, remove their record from the presence list
-                userRef.onDisconnect().remove();
+            onDisconnect(myConnectionRef).remove();
 
-                // B. Set the user's online status
-                // Use a simple boolean or timestamp as the value
-                set(userRef, true)
-                    .catch(error => console.error("Could not set user presence:", error));
-            }
-        });
+            // Listen for online users count
+            onValue(connectionsRef, (snapshot) => {
+                const count = snapshot.exists() ? snapshot.numChildren() : 0;
+                onlineCountElement.textContent = count;
+            });
 
-        // 3. Realtime listener for the total count
-        onValue(presenceRef, (snapshot) => {
-            const count = snapshot.exists() ? snapshot.size : 0;
-            
-            // Update the counter display
-            onlineCounter.textContent = `${count} ${count === 1 ? 'person' : 'people'} online`;
-            
-            // Optional: Add a subtle animation/glow effect on update
-            onlineCounter.style.transition = 'color 0.1s ease';
-            onlineCounter.style.color = 'var(--success)';
-            setTimeout(() => {
-                onlineCounter.style.color = 'var(--accent-bright)';
-            }, 500);
-        });
-        // ---------------------------------------------
-        
+            // Cleanup old connections (older than 5 minutes)
+            setInterval(() => {
+                onValue(connectionsRef, (snapshot) => {
+                    const now = Date.now();
+                    snapshot.forEach((child) => {
+                        const data = child.val();
+                        if (data.timestamp && (now - data.timestamp > 5 * 60 * 1000)) {
+                            remove(ref(db, `online/${child.key}`));
+                        }
+                    });
+                }, { onlyOnce: true });
+            }, 60000); // Check every minute
+        }
+
+        setupPresence();
+
         function addLog(action, scriptName, details = '') {
             const timestamp = Date.now();
             const logEntry = {
@@ -2115,13 +2152,11 @@
                 return;
             }
             
-            // Disable button to prevent double-clicks
             const addBtnElement = document.getElementById('addBtn');
             addBtnElement.disabled = true;
             addBtnElement.textContent = 'Processing...';
             
             try {
-                // Create script data object
                 const scriptData = {
                     name: name,
                     code: code,
@@ -2131,10 +2166,8 @@
                 };
                 
                 if (editingScriptKey) {
-                    // EDIT MODE
                     await update(ref(db, 'scripts/' + editingScriptKey), scriptData);
                     
-                    // Log tag changes
                     if (previousScriptState) {
                         if (isUniversal && !previousScriptState.isUniversal) {
                             addLog('tag-added', name, 'Added: Universal');
@@ -2152,7 +2185,6 @@
                     addLog('edited', name);
                     showToast('Script updated successfully!', 'success');
                 } else {
-                    // CREATE MODE
                     const newScriptRef = push(ref(db, 'scripts'));
                     await update(newScriptRef, scriptData);
                     addLog('created', name);
@@ -2164,7 +2196,6 @@
             } catch (error) {
                 showToast('Error: ' + error.message, 'error');
             } finally {
-                // Re-enable button
                 addBtnElement.disabled = false;
                 addBtnElement.textContent = editingScriptKey ? 'Update Script' : 'Add Script';
             }
@@ -2311,7 +2342,7 @@
                         name: card.querySelector('strong').textContent,
                         code: card.dataset.code,
                         isUniversal: card.dataset.universal === 'true',
-                        hasKeySystem: card.dataset.keysystem === 'true',
+                        hasKeySystem: card.dataset.keysystem === 'true'
                     };
                     requestEdit(key, scriptData);
                 });
