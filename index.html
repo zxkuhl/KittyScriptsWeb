@@ -2100,9 +2100,15 @@
                 return;
             }
             
+            // Disable button to prevent double-clicks
+            const addBtnElement = document.getElementById('addBtn');
+            addBtnElement.disabled = true;
+            addBtnElement.textContent = 'Uploading...';
+            
             try {
                 let thumbnailUrl = currentThumbnailUrl;
                 
+                // Create script data object
                 const scriptData = {
                     name: name,
                     code: code,
@@ -2112,6 +2118,7 @@
                 };
                 
                 if (editingScriptKey) {
+                    // EDIT MODE
                     if (thumbnailFile) {
                         thumbnailUrl = await uploadThumbnail(thumbnailFile, editingScriptKey);
                     }
@@ -2120,31 +2127,27 @@
                         scriptData.thumbnail = thumbnailUrl;
                     }
                     
-                    update(ref(db, 'scripts/' + editingScriptKey), scriptData)
-                        .then(() => {
-                            if (previousScriptState) {
-                                if (isUniversal && !previousScriptState.isUniversal) {
-                                    addLog('tag-added', name, 'Added: Universal');
-                                } else if (!isUniversal && previousScriptState.isUniversal) {
-                                    addLog('tag-removed', name, 'Removed: Universal');
-                                }
-                                
-                                if (hasKeySystem && !previousScriptState.hasKeySystem) {
-                                    addLog('tag-added', name, 'Added: Key System');
-                                } else if (!hasKeySystem && previousScriptState.hasKeySystem) {
-                                    addLog('tag-removed', name, 'Removed: Key System');
-                                }
-                            }
-                            
-                            addLog('edited', name);
-                            showToast('Script updated successfully!', 'success');
-                            hidePopup(addPopup);
-                            clearInputs();
-                        })
-                        .catch(error => {
-                            showToast('Error updating script: ' + error.message, 'error');
-                        });
+                    await update(ref(db, 'scripts/' + editingScriptKey), scriptData);
+                    
+                    // Log tag changes
+                    if (previousScriptState) {
+                        if (isUniversal && !previousScriptState.isUniversal) {
+                            addLog('tag-added', name, 'Added: Universal');
+                        } else if (!isUniversal && previousScriptState.isUniversal) {
+                            addLog('tag-removed', name, 'Removed: Universal');
+                        }
+                        
+                        if (hasKeySystem && !previousScriptState.hasKeySystem) {
+                            addLog('tag-added', name, 'Added: Key System');
+                        } else if (!hasKeySystem && previousScriptState.hasKeySystem) {
+                            addLog('tag-removed', name, 'Removed: Key System');
+                        }
+                    }
+                    
+                    addLog('edited', name);
+                    showToast('Script updated successfully!', 'success');
                 } else {
+                    // CREATE MODE
                     const newScriptRef = push(ref(db, 'scripts'));
                     const newKey = newScriptRef.key;
                     
@@ -2156,11 +2159,16 @@
                     await update(newScriptRef, scriptData);
                     addLog('created', name);
                     showToast('Script added successfully!', 'success');
-                    hidePopup(addPopup);
-                    clearInputs();
                 }
+                
+                hidePopup(addPopup);
+                clearInputs();
             } catch (error) {
                 showToast('Error: ' + error.message, 'error');
+            } finally {
+                // Re-enable button
+                addBtnElement.disabled = false;
+                addBtnElement.textContent = editingScriptKey ? 'Update Script' : 'Add Script';
             }
         });
 
