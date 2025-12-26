@@ -28,6 +28,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --info: #3b82f6;
         }
         
         * {
@@ -314,7 +315,7 @@
         .tagline span:nth-child(5) { animation-delay: 0.6s; }
         
         /* Scripts Tab */
-        #scriptsTab {
+        #scriptsTab, #logsTab {
             animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -440,6 +441,111 @@
         
         .add-btn:active {
             transform: rotate(90deg) scale(0.95);
+        }
+        
+        /* Logs Tab */
+        .logs-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .logs-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .logs-container::-webkit-scrollbar-track {
+            background: var(--bg-elevated);
+            border-radius: 4px;
+        }
+        
+        .logs-container::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+        
+        .log-entry {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--accent-primary);
+            border-radius: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            animation: slideInLeft 0.3s ease;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .log-entry.created {
+            border-left-color: var(--success);
+        }
+        
+        .log-entry.edited {
+            border-left-color: var(--warning);
+        }
+        
+        .log-entry.deleted {
+            border-left-color: var(--danger);
+        }
+        
+        .log-entry.tag-added {
+            border-left-color: var(--info);
+        }
+        
+        .log-entry.tag-removed {
+            border-left-color: var(--text-muted);
+        }
+        
+        .log-timestamp {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-action {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .log-entry.created .log-action {
+            color: var(--success);
+        }
+        
+        .log-entry.edited .log-action {
+            color: var(--warning);
+        }
+        
+        .log-entry.deleted .log-action {
+            color: var(--danger);
+        }
+        
+        .log-entry.tag-added .log-action,
+        .log-entry.tag-removed .log-action {
+            color: var(--info);
+        }
+        
+        .log-details {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .empty-logs {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-dim);
         }
         
         /* Filter Popup */
@@ -1068,6 +1174,7 @@
         <div class="tabs">
             <div class="tab active" data-tab="main">Main</div>
             <div class="tab" data-tab="scripts">Scripts</div>
+            <div class="tab" data-tab="logs">Logs</div>
         </div>
         <div class="social-buttons">
             <button class="discord-icon-btn" onclick="window.open('https://discord.gg/KPUPp4m9pJ', '_blank')" aria-label="Discord">
@@ -1128,6 +1235,19 @@
                 <button class="add-btn" id="addScriptBtn" aria-label="Add new script">+</button>
             </div>
             <div id="scriptsContainer"></div>
+        </section>
+
+        <!-- Logs Tab -->
+        <section id="logsTab" style="display: none;">
+            <div class="script-header">
+                <h2>Activity Logs</h2>
+            </div>
+            <div class="logs-container" id="logsContainer">
+                <div class="empty-logs">
+                    <h3>No activity logs yet</h3>
+                    <p>Actions will appear here</p>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -1199,7 +1319,7 @@
     <!-- Firebase & App Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, push, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, push, remove, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -1224,6 +1344,7 @@
         let editingScriptKey = null;
         let isUniversal = false;
         let hasKeySystem = false;
+        let previousScriptState = null; // For tracking tag changes
         
         // Filter state
         let filters = {
@@ -1234,7 +1355,9 @@
         // DOM Elements
         const mainTab = document.getElementById('mainTab');
         const scriptsTab = document.getElementById('scriptsTab');
+        const logsTab = document.getElementById('logsTab');
         const scriptsContainer = document.getElementById('scriptsContainer');
+        const logsContainer = document.getElementById('logsContainer');
         const passwordPopup = document.getElementById('passwordPopup');
         const addPopup = document.getElementById('addPopup');
         const filterPopup = document.getElementById('filterPopup');
@@ -1250,6 +1373,110 @@
         const filterKeySystem = document.getElementById('filterKeySystem');
         const popupTitle = document.getElementById('popupTitle');
         const addBtn = document.getElementById('addBtn');
+
+        // Logging Functions
+        function addLog(action, scriptName, details = '') {
+            const timestamp = Date.now();
+            const logEntry = {
+                action: action,
+                scriptName: scriptName,
+                details: details,
+                timestamp: timestamp
+            };
+            
+            push(ref(db, 'logs'), logEntry);
+        }
+
+        function cleanOldLogs() {
+            const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+            
+            onValue(ref(db, 'logs'), (snapshot) => {
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const log = child.val();
+                        if (log.timestamp < twentyFourHoursAgo) {
+                            remove(ref(db, 'logs/' + child.key));
+                        }
+                    });
+                }
+            }, { onlyOnce: true });
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            
+            return date.toLocaleString();
+        }
+
+        function renderLogs() {
+            onValue(ref(db, 'logs'), (snapshot) => {
+                logsContainer.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    logsContainer.innerHTML = `
+                        <div class="empty-logs">
+                            <h3>No activity logs yet</h3>
+                            <p>Actions will appear here</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const logs = [];
+                snapshot.forEach((child) => {
+                    logs.push({ key: child.key, ...child.val() });
+                });
+                
+                // Sort by timestamp (newest first)
+                logs.sort((a, b) => b.timestamp - a.timestamp);
+                
+                logs.forEach(log => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = `log-entry ${log.action}`;
+                    
+                    let actionText = '';
+                    switch(log.action) {
+                        case 'created':
+                            actionText = 'CREATED';
+                            break;
+                        case 'edited':
+                            actionText = 'EDITED';
+                            break;
+                        case 'deleted':
+                            actionText = 'DELETED';
+                            break;
+                        case 'tag-added':
+                            actionText = 'TAG ADDED';
+                            break;
+                        case 'tag-removed':
+                            actionText = 'TAG REMOVED';
+                            break;
+                    }
+                    
+                    logEntry.innerHTML = `
+                        <div class="log-timestamp">${formatTimestamp(log.timestamp)}</div>
+                        <div class="log-action">${actionText}</div>
+                        <div class="log-details">Script: ${log.scriptName}</div>
+                        ${log.details ? `<div class="log-details">${log.details}</div>` : ''}
+                    `;
+                    
+                    logsContainer.appendChild(logEntry);
+                });
+            });
+        }
+
+        // Clean old logs on page load
+        cleanOldLogs();
+        renderLogs();
 
         // Utility Functions
         function showPopup(popup) {
@@ -1267,6 +1494,7 @@
             isUniversal = false;
             hasKeySystem = false;
             editingScriptKey = null;
+            previousScriptState = null;
             universalCheckbox.classList.remove('checked');
             keySystemCheckbox.classList.remove('checked');
             popupTitle.textContent = 'Add New Script';
@@ -1345,6 +1573,7 @@
                 
                 mainTab.style.display = tabName === 'main' ? 'block' : 'none';
                 scriptsTab.style.display = tabName === 'scripts' ? 'block' : 'none';
+                logsTab.style.display = tabName === 'logs' ? 'block' : 'none';
             });
         });
 
@@ -1432,14 +1661,21 @@
                 showPopup(addPopup);
                 setTimeout(() => scriptName.focus(), 100);
             } else if (actionType === 'delete' && pendingDeleteKey) {
-                remove(ref(db, 'scripts/' + pendingDeleteKey))
-                    .then(() => {
-                        showToast('Script deleted successfully', 'success');
-                        pendingDeleteKey = null;
-                    })
-                    .catch(error => {
-                        showToast('Error deleting script: ' + error.message, 'error');
-                    });
+                // Get script name before deleting
+                onValue(ref(db, 'scripts/' + pendingDeleteKey), (snapshot) => {
+                    if (snapshot.exists()) {
+                        const script = snapshot.val();
+                        remove(ref(db, 'scripts/' + pendingDeleteKey))
+                            .then(() => {
+                                addLog('deleted', script.name);
+                                showToast('Script deleted successfully', 'success');
+                                pendingDeleteKey = null;
+                            })
+                            .catch(error => {
+                                showToast('Error deleting script: ' + error.message, 'error');
+                            });
+                    }
+                }, { onlyOnce: true });
             }
         });
 
@@ -1473,6 +1709,22 @@
                 // Update existing script
                 update(ref(db, 'scripts/' + editingScriptKey), scriptData)
                     .then(() => {
+                        // Check for tag changes
+                        if (previousScriptState) {
+                            if (isUniversal && !previousScriptState.isUniversal) {
+                                addLog('tag-added', name, 'Added: Universal');
+                            } else if (!isUniversal && previousScriptState.isUniversal) {
+                                addLog('tag-removed', name, 'Removed: Universal');
+                            }
+                            
+                            if (hasKeySystem && !previousScriptState.hasKeySystem) {
+                                addLog('tag-added', name, 'Added: Key System');
+                            } else if (!hasKeySystem && previousScriptState.hasKeySystem) {
+                                addLog('tag-removed', name, 'Removed: Key System');
+                            }
+                        }
+                        
+                        addLog('edited', name);
                         showToast('Script updated successfully!', 'success');
                         hidePopup(addPopup);
                         clearInputs();
@@ -1484,6 +1736,7 @@
                 // Add new script
                 push(ref(db, 'scripts'), scriptData)
                     .then(() => {
+                        addLog('created', name);
                         showToast('Script added successfully!', 'success');
                         hidePopup(addPopup);
                         clearInputs();
@@ -1536,9 +1789,11 @@
         window.requestEdit = (key, scriptData) => {
             editingScriptKey = key;
             actionType = 'edit';
+            previousScriptState = {
+                isUniversal: scriptData.isUniversal,
+                hasKeySystem: scriptData.hasKeySystem
+            };
             showPopup(passwordPopup);
-            
-            // Store the script data for after authentication
             window.tempEditData = scriptData;
             setTimeout(() => adminPass.focus(), 100);
         };
@@ -1558,7 +1813,6 @@
         }
 
         // Override password confirmation to handle edit
-        const originalConfirm = document.getElementById('confirmPasswordBtn').onclick;
         document.getElementById('confirmPasswordBtn').addEventListener('click', () => {
             if (actionType === 'edit' && window.tempEditData) {
                 setTimeout(() => {
@@ -1713,4 +1967,4 @@
         });
     </script>
 </body>
-</html>
+                        </html>
