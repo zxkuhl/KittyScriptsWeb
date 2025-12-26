@@ -1568,3 +1568,809 @@
     </div>
 
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, push, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
+            authDomain: "kittyscriptsweb.firebaseapp.com",
+            projectId: "kittyscriptsweb",
+            storageBucket: "kittyscriptsweb.appspot.com",
+            messagingSenderId: "866548422450",
+            appId: "1:866548422450:web:a327c122f0d8e57fa1e92b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        const ADMIN_PASSWORDS = ["i miss m.", "avalarson"];
+        
+        let actionType = null;
+        let pendingDeleteKey = null;
+        let editingScriptKey = null;
+        let isUniversal = false;
+        let hasKeySystem = false;
+        let previousScriptState = null;
+        let selectedLogs = new Set();
+        let isEditMode = false;
+        let thumbnailFile = null;
+        let currentThumbnailUrl = null;
+        
+        let filters = {
+            universal: 'any',
+            keySystem: 'any'
+        };
+
+        const mainTab = document.getElementById('mainTab');
+        const scriptsTab = document.getElementById('scriptsTab');
+        const logsTab = document.getElementById('logsTab');
+        const scriptsContainer = document.getElementById('scriptsContainer');
+        const logsContainer = document.getElementById('logsContainer');
+        const passwordPopup = document.getElementById('passwordPopup');
+        const addPopup = document.getElementById('addPopup');
+        const filterPopup = document.getElementById('filterPopup');
+        const adminPass = document.getElementById('adminPass');
+        const scriptName = document.getElementById('scriptName');
+        const scriptCode = document.getElementById('scriptCode');
+        const thumbnailInput = document.getElementById('thumbnailInput');
+        const toast = document.getElementById('toast');
+        const searchInput = document.getElementById('searchInput');
+        const filterBtn = document.getElementById('filterBtn');
+        const universalCheckbox = document.getElementById('universalCheckbox');
+        const keySystemCheckbox = document.getElementById('keySystemCheckbox');
+        const filterUniversal = document.getElementById('filterUniversal');
+        const filterKeySystem = document.getElementById('filterKeySystem');
+        const popupTitle = document.getElementById('popupTitle');
+        const addBtn = document.getElementById('addBtn');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const logsHeaderActions = document.getElementById('logsHeaderActions');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Theme Toggle
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Thumbnail handling
+        thumbnailInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                thumbnailFile = e.target.files[0];
+            }
+        });
+
+        async function uploadThumbnail(file, scriptKey) {
+            if (!file) return null;
+            
+            const fileRef = storageRef(storage, `thumbnails/${scriptKey}/${file.name}`);
+            await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(fileRef);
+            return downloadURL;
+        }
+
+        function addLog(action, scriptName, details = '') {
+            const timestamp = Date.now();
+            const logEntry = {
+                action: action,
+                scriptName: scriptName,
+                details: details,
+                timestamp: timestamp
+            };
+            
+            push(ref(db, 'logs'), logEntry);
+        }
+
+        function cleanOldLogs() {
+            const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+            
+            onValue(ref(db, 'logs'), (snapshot) => {
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const log = child.val();
+                        if (log.timestamp < twentyFourHoursAgo) {
+                            remove(ref(db, 'logs/' + child.key));
+                        }
+                    });
+                }
+            }, { onlyOnce: true });
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            
+            return date.toLocaleString();
+        }
+
+        function enterEditMode() {
+            isEditMode = true;
+            selectedLogs.clear();
+            logsHeaderActions.classList.add('edit-mode');
+            renderLogs();
+        }
+
+        function exitEditMode() {
+            isEditMode = false;
+            selectedLogs.clear();
+            logsHeaderActions.classList.remove('edit-mode');
+            renderLogs();
+        }
+
+        function renderLogs() {
+            onValue(ref(db, 'logs'), (snapshot) => {
+                logsContainer.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    logsContainer.innerHTML = `
+                        <div class="empty-logs">
+                            <h3>No activity logs yet</h3>
+                            <p>Actions will appear here</p>
+                        </div>
+                    `;
+                    selectedLogs.clear();
+                    updateSelectAllButton();
+                    return;
+                }
+                
+                const logs = [];
+                snapshot.forEach((child) => {
+                    logs.push({ key: child.key, ...child.val() });
+                });
+                
+                logs.sort((a, b) => b.timestamp - a.timestamp);
+                
+                logs.forEach(log => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = `log-entry ${log.action}`;
+                    logEntry.dataset.key = log.key;
+                    
+                    if (isEditMode) {
+                        logEntry.classList.add('selectable');
+                        if (selectedLogs.has(log.key)) {
+                            logEntry.classList.add('selected');
+                        }
+                    }
+                    
+                    let actionText = '';
+                    switch(log.action) {
+                        case 'created':
+                            actionText = 'CREATED';
+                            break;
+                        case 'edited':
+                            actionText = 'EDITED';
+                            break;
+                        case 'deleted':
+                            actionText = 'DELETED';
+                            break;
+                        case 'tag-added':
+                            actionText = 'TAG ADDED';
+                            break;
+                        case 'tag-removed':
+                            actionText = 'TAG REMOVED';
+                            break;
+                    }
+                    
+                    logEntry.innerHTML = `
+                        <div class="log-timestamp">${formatTimestamp(log.timestamp)}</div>
+                        <div class="log-action">${actionText}</div>
+                        <div class="log-details">Script: ${log.scriptName}</div>
+                        ${log.details ? `<div class="log-details">${log.details}</div>` : ''}
+                    `;
+                    
+                    if (isEditMode) {
+                        logEntry.addEventListener('click', () => {
+                            toggleLogSelection(log.key);
+                        });
+                    }
+                    
+                    logsContainer.appendChild(logEntry);
+                });
+                
+                updateSelectAllButton();
+            });
+        }
+
+        function toggleLogSelection(key) {
+            if (!isEditMode) return;
+            
+            if (selectedLogs.has(key)) {
+                selectedLogs.delete(key);
+            } else {
+                selectedLogs.add(key);
+            }
+            
+            const logEntry = logsContainer.querySelector(`[data-key="${key}"]`);
+            if (logEntry) {
+                logEntry.classList.toggle('selected');
+            }
+            
+            updateSelectAllButton();
+        }
+
+        function updateSelectAllButton() {
+            if (!isEditMode) return;
+            
+            const allLogs = logsContainer.querySelectorAll('.log-entry');
+            if (allLogs.length === 0) {
+                selectAllBtn.classList.remove('active');
+                return;
+            }
+            
+            if (selectedLogs.size === allLogs.length) {
+                selectAllBtn.classList.add('active');
+                selectAllBtn.textContent = 'Deselect All';
+            } else {
+                selectAllBtn.classList.remove('active');
+                selectAllBtn.textContent = 'Select All';
+            }
+        }
+
+        selectAllBtn.addEventListener('click', () => {
+            const allLogs = logsContainer.querySelectorAll('.log-entry');
+            
+            if (selectedLogs.size === allLogs.length) {
+                selectedLogs.clear();
+                allLogs.forEach(log => log.classList.remove('selected'));
+            } else {
+                allLogs.forEach(log => {
+                    const key = log.dataset.key;
+                    selectedLogs.add(key);
+                    log.classList.add('selected');
+                });
+            }
+            
+            updateSelectAllButton();
+        });
+
+        deleteSelectedBtn.addEventListener('click', () => {
+            if (selectedLogs.size === 0) {
+                showToast('No logs selected', 'error');
+                return;
+            }
+            
+            let deleteCount = 0;
+            const totalToDelete = selectedLogs.size;
+            
+            selectedLogs.forEach(logKey => {
+                remove(ref(db, 'logs/' + logKey))
+                    .then(() => {
+                        deleteCount++;
+                        if (deleteCount === totalToDelete) {
+                            showToast(`${totalToDelete} log(s) deleted successfully`, 'success');
+                            selectedLogs.clear();
+                            exitEditMode();
+                        }
+                    })
+                    .catch(error => {
+                        showToast('Error deleting logs: ' + error.message, 'error');
+                    });
+            });
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            exitEditMode();
+        });
+
+        cleanOldLogs();
+        renderLogs();
+
+        function showPopup(popup) {
+            popup.classList.add('show');
+        }
+
+        function hidePopup(popup) {
+            popup.classList.remove('show');
+        }
+
+        function clearInputs() {
+            adminPass.value = '';
+            scriptName.value = '';
+            scriptCode.value = '';
+            thumbnailInput.value = '';
+            thumbnailFile = null;
+            currentThumbnailUrl = null;
+            isUniversal = false;
+            hasKeySystem = false;
+            editingScriptKey = null;
+            previousScriptState = null;
+            universalCheckbox.classList.remove('checked');
+            keySystemCheckbox.classList.remove('checked');
+            popupTitle.textContent = 'Add New Script';
+            addBtn.textContent = 'Add Script';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const toastMessage = toast.querySelector('.toast-message');
+            const toastIcon = toast.querySelector('.toast-icon');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast show ' + type;
+            
+            if (type === 'success') {
+                toastIcon.textContent = '✓';
+            } else if (type === 'error') {
+                toastIcon.textContent = '✕';
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function matchesFilters(script) {
+            if (filters.universal === 'yes' && !script.isUniversal) return false;
+            if (filters.universal === 'no' && script.isUniversal) return false;
+            if (filters.keySystem === 'yes' && !script.hasKeySystem) return false;
+            if (filters.keySystem === 'no' && script.hasKeySystem) return false;
+            return true;
+        }
+
+        function filterScripts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.script-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('strong').textContent.toLowerCase();
+                const code = card.dataset.code.toLowerCase();
+                const scriptData = {
+                    isUniversal: card.dataset.universal === 'true',
+                    hasKeySystem: card.dataset.keysystem === 'true'
+                };
+                
+                const matchesSearch = name.includes(searchTerm) || code.includes(searchTerm);
+                const matchesFilter = matchesFilters(scriptData);
+                
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            const hasActiveFilters = filters.universal !== 'any' || filters.keySystem !== 'any';
+            if (hasActiveFilters) {
+                filterBtn.classList.add('active');
+            } else {
+                filterBtn.classList.remove('active');
+            }
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                mainTab.style.display = tabName === 'main' ? 'block' : 'none';
+                scriptsTab.style.display = tabName === 'scripts' ? 'block' : 'none';
+                logsTab.style.display = tabName === 'logs' ? 'block' : 'none';
+                
+                if (tabName !== 'logs' && isEditMode) {
+                    exitEditMode();
+                }
+            });
+        });
+
+        universalCheckbox.addEventListener('click', () => {
+            isUniversal = !isUniversal;
+            universalCheckbox.classList.toggle('checked');
+        });
+
+        keySystemCheckbox.addEventListener('click', () => {
+            hasKeySystem = !hasKeySystem;
+            keySystemCheckbox.classList.toggle('checked');
+        });
+
+        function cycleFilterCheckbox(element, filterKey) {
+            const currentState = filters[filterKey];
+            
+            if (currentState === 'any') {
+                filters[filterKey] = 'yes';
+                element.className = 'filter-checkbox checked';
+                element.dataset.state = 'yes';
+            } else if (currentState === 'yes') {
+                filters[filterKey] = 'no';
+                element.className = 'filter-checkbox unchecked';
+                element.dataset.state = 'no';
+            } else {
+                filters[filterKey] = 'any';
+                element.className = 'filter-checkbox';
+                element.dataset.state = 'any';
+            }
+        }
+
+        filterUniversal.addEventListener('click', () => {
+            cycleFilterCheckbox(filterUniversal, 'universal');
+        });
+
+        filterKeySystem.addEventListener('click', () => {
+            cycleFilterCheckbox(filterKeySystem, 'keySystem');
+        });
+
+        filterBtn.addEventListener('click', () => {
+            showPopup(filterPopup);
+        });
+
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            hidePopup(filterPopup);
+            filterScripts();
+        });
+
+        document.getElementById('clearFilters').addEventListener('click', () => {
+            filters.universal = 'any';
+            filters.keySystem = 'any';
+            filterUniversal.className = 'filter-checkbox';
+            filterUniversal.dataset.state = 'any';
+            filterKeySystem.className = 'filter-checkbox';
+            filterKeySystem.dataset.state = 'any';
+            hidePopup(filterPopup);
+            filterScripts();
+        });
+
+        document.getElementById('addScriptBtn').addEventListener('click', () => {
+            actionType = 'add';
+            showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
+        });
+
+        document.getElementById('clearLogsBtn').addEventListener('click', () => {
+            actionType = 'clear-logs';
+            showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
+        });
+
+        document.getElementById('confirmPasswordBtn').addEventListener('click', () => {
+            const password = adminPass.value.trim();
+            
+            if (!ADMIN_PASSWORDS.includes(password)) {
+                showToast('Incorrect password. Access denied.', 'error');
+                return;
+            }
+            
+            hidePopup(passwordPopup);
+            adminPass.value = '';
+            
+            if (actionType === 'add' || actionType === 'edit') {
+                showPopup(addPopup);
+                setTimeout(() => scriptName.focus(), 100);
+            } else if (actionType === 'delete' && pendingDeleteKey) {
+                onValue(ref(db, 'scripts/' + pendingDeleteKey), (snapshot) => {
+                    if (snapshot.exists()) {
+                        const script = snapshot.val();
+                        remove(ref(db, 'scripts/' + pendingDeleteKey))
+                            .then(() => {
+                                addLog('deleted', script.name);
+                                showToast('Script deleted successfully', 'success');
+                                pendingDeleteKey = null;
+                            })
+                            .catch(error => {
+                                showToast('Error deleting script: ' + error.message, 'error');
+                            });
+                    }
+                }, { onlyOnce: true });
+            } else if (actionType === 'clear-logs') {
+                enterEditMode();
+            }
+            
+            if (actionType === 'edit' && window.tempEditData) {
+                setTimeout(() => {
+                    loadEditData(window.tempEditData);
+                    delete window.tempEditData;
+                }, 100);
+            }
+        });
+
+        document.getElementById('cancelPasswordBtn').addEventListener('click', () => {
+            hidePopup(passwordPopup);
+            clearInputs();
+            actionType = null;
+            pendingDeleteKey = null;
+        });
+
+        document.getElementById('addBtn').addEventListener('click', async () => {
+            const name = scriptName.value.trim();
+            const code = scriptCode.value.trim();
+            
+            if (!name || !code) {
+                showToast('Please fill in both script name and code', 'error');
+                return;
+            }
+            
+            try {
+                let thumbnailUrl = currentThumbnailUrl;
+                
+                const scriptData = {
+                    name: name,
+                    code: code,
+                    isUniversal: isUniversal,
+                    hasKeySystem: hasKeySystem,
+                    timestamp: Date.now()
+                };
+                
+                if (editingScriptKey) {
+                    if (thumbnailFile) {
+                        thumbnailUrl = await uploadThumbnail(thumbnailFile, editingScriptKey);
+                    }
+                    
+                    if (thumbnailUrl) {
+                        scriptData.thumbnail = thumbnailUrl;
+                    }
+                    
+                    update(ref(db, 'scripts/' + editingScriptKey), scriptData)
+                        .then(() => {
+                            if (previousScriptState) {
+                                if (isUniversal && !previousScriptState.isUniversal) {
+                                    addLog('tag-added', name, 'Added: Universal');
+                                } else if (!isUniversal && previousScriptState.isUniversal) {
+                                    addLog('tag-removed', name, 'Removed: Universal');
+                                }
+                                
+                                if (hasKeySystem && !previousScriptState.hasKeySystem) {
+                                    addLog('tag-added', name, 'Added: Key System');
+                                } else if (!hasKeySystem && previousScriptState.hasKeySystem) {
+                                    addLog('tag-removed', name, 'Removed: Key System');
+                                }
+                            }
+                            
+                            addLog('edited', name);
+                            showToast('Script updated successfully!', 'success');
+                            hidePopup(addPopup);
+                            clearInputs();
+                        })
+                        .catch(error => {
+                            showToast('Error updating script: ' + error.message, 'error');
+                        });
+                } else {
+                    const newScriptRef = push(ref(db, 'scripts'));
+                    const newKey = newScriptRef.key;
+                    
+                    if (thumbnailFile) {
+                        thumbnailUrl = await uploadThumbnail(thumbnailFile, newKey);
+                        scriptData.thumbnail = thumbnailUrl;
+                    }
+                    
+                    await update(newScriptRef, scriptData);
+                    addLog('created', name);
+                    showToast('Script added successfully!', 'success');
+                    hidePopup(addPopup);
+                    clearInputs();
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('cancelAddBtn').addEventListener('click', () => {
+            hidePopup(addPopup);
+            clearInputs();
+        });
+
+        window.copyScript = async (code) => {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(code);
+                    showToast('Code copied to clipboard!', 'success');
+                } else {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = code;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        showToast('Code copied to clipboard!', 'success');
+                    } catch (err) {
+                        showToast('Failed to copy code', 'error');
+                    }
+                    
+                    textArea.remove();
+                }
+            } catch (err) {
+                showToast('Failed to copy code', 'error');
+            }
+        };
+
+        window.requestEdit = (key, scriptData) => {
+            editingScriptKey = key;
+            actionType = 'edit';
+            previousScriptState = {
+                isUniversal: scriptData.isUniversal,
+                hasKeySystem: scriptData.hasKeySystem
+            };
+            currentThumbnailUrl = scriptData.thumbnail || null;
+            showPopup(passwordPopup);
+            window.tempEditData = scriptData;
+            setTimeout(() => adminPass.focus(), 100);
+        };
+
+        function loadEditData(scriptData) {
+            scriptName.value = scriptData.name;
+            scriptCode.value = scriptData.code;
+            isUniversal = scriptData.isUniversal || false;
+            hasKeySystem = scriptData.hasKeySystem || false;
+            currentThumbnailUrl = scriptData.thumbnail || null;
+            
+            if (isUniversal) universalCheckbox.classList.add('checked');
+            if (hasKeySystem) keySystemCheckbox.classList.add('checked');
+            
+            popupTitle.textContent = 'Edit Script';
+            addBtn.textContent = 'Update Script';
+        }
+
+        window.requestDelete = (key) => {
+            pendingDeleteKey = key;
+            actionType = 'delete';
+            showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
+        };
+
+        onValue(ref(db, 'scripts'), (snapshot) => {
+            scriptsContainer.innerHTML = '';
+            
+            if (!snapshot.exists()) {
+                scriptsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No scripts yet</h3>
+                        <p>Click the + button to add your first script</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let delay = 0;
+            snapshot.forEach((childSnapshot) => {
+                const key = childSnapshot.key;
+                const script = childSnapshot.val();
+                
+                const scriptCard = document.createElement('div');
+                scriptCard.className = 'script-card';
+                scriptCard.style.animationDelay = `${delay}s`;
+                delay += 0.05;
+                
+                scriptCard.dataset.code = script.code;
+                scriptCard.dataset.universal = script.isUniversal || false;
+                scriptCard.dataset.keysystem = script.hasKeySystem || false;
+                
+                let badges = '';
+                if (script.isUniversal) {
+                    badges += '<span class="badge universal">Universal</span>';
+                }
+                if (script.hasKeySystem) {
+                    badges += '<span class="badge key-system">Key System</span>';
+                }
+                
+                let thumbnailHtml = '';
+                if (script.thumbnail) {
+                    thumbnailHtml = `<img src="${script.thumbnail}" alt="${escapeHtml(script.name)}" class="script-thumbnail">`;
+                }
+                
+                scriptCard.innerHTML = `
+                    ${thumbnailHtml}
+                    <div class="script-card-header">
+                        <strong>${escapeHtml(script.name)}</strong>
+                        <div class="script-badges">
+                            ${badges}
+                        </div>
+                    </div>
+                    <pre>${escapeHtml(script.code)}</pre>
+                    <div class="script-actions">
+                        <button class="copy-btn" data-action="copy">
+                            Copy
+                        </button>
+                        <button class="edit-btn" data-action="edit" data-key="${key}">
+                            Edit
+                        </button>
+                        <button class="delete-btn" data-action="delete" data-key="${key}">
+                            Delete
+                        </button>
+                    </div>
+                `;
+                
+                scriptsContainer.appendChild(scriptCard);
+            });
+            
+            document.querySelectorAll('[data-action="copy"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const card = e.target.closest('.script-card');
+                    const code = card.dataset.code;
+                    copyScript(code);
+                });
+            });
+            
+            document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const key = e.target.dataset.key;
+                    const card = e.target.closest('.script-card');
+                    const scriptData = {
+                        name: card.querySelector('strong').textContent,
+                        code: card.dataset.code,
+                        isUniversal: card.dataset.universal === 'true',
+                        hasKeySystem: card.dataset.keysystem === 'true',
+                        thumbnail: card.querySelector('.script-thumbnail')?.src || null
+                    };
+                    requestEdit(key, scriptData);
+                });
+            });
+            
+            document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const key = e.target.dataset.key;
+                    requestDelete(key);
+                });
+            });
+            
+            filterScripts();
+        });
+
+        searchInput.addEventListener('input', filterScripts);
+
+        [passwordPopup, addPopup, filterPopup].forEach(popup => {
+            popup.addEventListener('click', (e) => {
+                if (e.target === popup) {
+                    hidePopup(popup);
+                    if (popup === passwordPopup || popup === addPopup) {
+                        clearInputs();
+                        actionType = null;
+                        pendingDeleteKey = null;
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (passwordPopup.classList.contains('show')) {
+                    document.getElementById('cancelPasswordBtn').click();
+                } else if (addPopup.classList.contains('show')) {
+                    document.getElementById('cancelAddBtn').click();
+                } else if (filterPopup.classList.contains('show')) {
+                    hidePopup(filterPopup);
+                } else if (isEditMode) {
+                    exitEditMode();
+                }
+            }
+
+            if (e.key === 'Enter' && !e.shiftKey) {
+                if (passwordPopup.classList.contains('show')) {
+                    e.preventDefault();
+                    document.getElementById('confirmPasswordBtn').click();
+                } else if (addPopup.classList.contains('show') && document.activeElement !== scriptCode) {
+                    e.preventDefault();
+                    document.getElementById('addBtn').click();
+                } else if (filterPopup.classList.contains('show')) {
+                    e.preventDefault();
+                    document.getElementById('applyFilters').click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
