@@ -379,6 +379,15 @@
         .tagline span:nth-child(4) { animation-delay: 0.5s; color: var(--accent-bright); }
         .tagline span:nth-child(5) { animation-delay: 0.6s; }
         
+        /* NEW STYLING for Online Counter */
+        #onlineCounter {
+            margin-top: 3rem; 
+            font-size: 1.5rem; 
+            color: var(--accent-bright); 
+            font-weight: 700; 
+            letter-spacing: 0.05em;
+        }
+
         #scriptsTab, #logsTab {
             animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -586,6 +595,10 @@
         .logs-container::-webkit-scrollbar-thumb {
             background: var(--accent-primary);
             border-radius: 4px;
+        }
+        
+        .logs-container::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-bright);
         }
         
         .log-entry {
@@ -1443,6 +1456,9 @@
                 <span> simple</span>
                 <span> • clean</span>
             </p>
+            <div id="onlineCounter" style="margin-top: 3rem; font-size: 1.5rem; color: var(--accent-bright); font-weight: 700; letter-spacing: 0.05em;">
+                Loading online users...
+            </div>
         </section>
 
         <section id="scriptsTab" style="display: none;">
@@ -1552,8 +1568,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, push, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-        // import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js"; // Removed Storage import
+        import { getDatabase, ref, push, remove, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
@@ -1566,7 +1581,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        // const storage = getStorage(app); // Removed Storage initialization
 
         const ADMIN_PASSWORDS = ["i miss m.", "avalarson"];
         
@@ -1578,8 +1592,6 @@
         let previousScriptState = null;
         let selectedLogs = new Set();
         let isEditMode = false;
-        // let thumbnailFile = null; // Removed
-        // let currentThumbnailUrl = null; // Removed
         
         let filters = {
             universal: 'any',
@@ -1597,7 +1609,6 @@
         const adminPass = document.getElementById('adminPass');
         const scriptName = document.getElementById('scriptName');
         const scriptCode = document.getElementById('scriptCode');
-        // const thumbnailInput = document.getElementById('thumbnailInput'); // Removed
         const toast = document.getElementById('toast');
         const searchInput = document.getElementById('searchInput');
         const filterBtn = document.getElementById('filterBtn');
@@ -1612,6 +1623,8 @@
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const logsHeaderActions = document.getElementById('logsHeaderActions');
         const themeToggle = document.getElementById('themeToggle');
+        // NEW: Online Counter Element
+        const onlineCounter = document.getElementById('onlineCounter');
 
         // Theme Toggle
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -1624,8 +1637,44 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // Thumbnail handling - REMOVED
+        // --- Online User Counter / Presence System ---
+        const connectedRef = ref(db, '.info/connected'); // Firebase built-in connection status
+        const presenceRef = ref(db, 'presence'); 
 
+        // 1. Generate a unique user ID for this session
+        const userId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+        const userRef = ref(db, `presence/${userId}`);
+
+        // 2. Set up presence logic
+        onValue(connectedRef, (snapshot) => {
+            if (snapshot.val() === true) {
+                // A. Set up onDisconnect hook
+                // If the user disconnects, remove their record from the presence list
+                userRef.onDisconnect().remove();
+
+                // B. Set the user's online status
+                // Use a simple boolean or timestamp as the value
+                set(userRef, true)
+                    .catch(error => console.error("Could not set user presence:", error));
+            }
+        });
+
+        // 3. Realtime listener for the total count
+        onValue(presenceRef, (snapshot) => {
+            const count = snapshot.exists() ? snapshot.size : 0;
+            
+            // Update the counter display
+            onlineCounter.textContent = `${count} ${count === 1 ? 'person' : 'people'} online`;
+            
+            // Optional: Add a subtle animation/glow effect on update
+            onlineCounter.style.transition = 'color 0.1s ease';
+            onlineCounter.style.color = 'var(--success)';
+            setTimeout(() => {
+                onlineCounter.style.color = 'var(--accent-bright)';
+            }, 500);
+        });
+        // ---------------------------------------------
+        
         function addLog(action, scriptName, details = '') {
             const timestamp = Date.now();
             const logEntry = {
@@ -1852,9 +1901,6 @@
             adminPass.value = '';
             scriptName.value = '';
             scriptCode.value = '';
-            // thumbnailInput.value = ''; // Removed
-            // thumbnailFile = null; // Removed
-            // currentThumbnailUrl = null; // Removed
             isUniversal = false;
             hasKeySystem = false;
             editingScriptKey = null;
@@ -2072,7 +2118,7 @@
             // Disable button to prevent double-clicks
             const addBtnElement = document.getElementById('addBtn');
             addBtnElement.disabled = true;
-            addBtnElement.textContent = 'Processing...'; // Changed text to reflect no upload
+            addBtnElement.textContent = 'Processing...';
             
             try {
                 // Create script data object
@@ -2165,7 +2211,6 @@
                 isUniversal: scriptData.isUniversal,
                 hasKeySystem: scriptData.hasKeySystem
             };
-            // currentThumbnailUrl = scriptData.thumbnail || null; // Removed
             showPopup(passwordPopup);
             window.tempEditData = scriptData;
             setTimeout(() => adminPass.focus(), 100);
@@ -2176,7 +2221,6 @@
             scriptCode.value = scriptData.code;
             isUniversal = scriptData.isUniversal || false;
             hasKeySystem = scriptData.hasKeySystem || false;
-            // currentThumbnailUrl = scriptData.thumbnail || null; // Removed
             
             if (isUniversal) universalCheckbox.classList.add('checked');
             if (hasKeySystem) keySystemCheckbox.classList.add('checked');
@@ -2227,11 +2271,6 @@
                     badges += '<span class="badge key-system">Key System</span>';
                 }
                 
-                // let thumbnailHtml = ''; // Removed
-                // if (script.thumbnail) { // Removed
-                //     thumbnailHtml = `<img src="${script.thumbnail}" alt="${escapeHtml(script.name)}" class="script-thumbnail">`; // Removed
-                // }
-                
                 scriptCard.innerHTML = `
                     <div class="script-card-header">
                         <strong>${escapeHtml(script.name)}</strong>
@@ -2273,7 +2312,6 @@
                         code: card.dataset.code,
                         isUniversal: card.dataset.universal === 'true',
                         hasKeySystem: card.dataset.keysystem === 'true',
-                        // thumbnail: card.querySelector('.script-thumbnail')?.src || null // Removed
                     };
                     requestEdit(key, scriptData);
                 });
