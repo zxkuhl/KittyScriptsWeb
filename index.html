@@ -46,7 +46,6 @@
             overflow-x: hidden;
         }
         
-        /* Animated gradient background */
         body::before {
             content: '';
             position: fixed;
@@ -68,7 +67,6 @@
             66% { transform: translate(-5%, 5%) rotate(240deg); }
         }
         
-        /* Navbar */
         .navbar {
             position: sticky;
             top: 0;
@@ -215,7 +213,6 @@
             fill: white;
         }
         
-        /* Content Area */
         .content {
             max-width: 1400px;
             margin: 0 auto;
@@ -224,7 +221,6 @@
             z-index: 1;
         }
         
-        /* Main Tab */
         #mainTab {
             text-align: center;
             padding: 6rem 2rem;
@@ -314,7 +310,6 @@
         .tagline span:nth-child(4) { animation-delay: 0.5s; color: var(--accent-bright); }
         .tagline span:nth-child(5) { animation-delay: 0.6s; }
         
-        /* Scripts Tab */
         #scriptsTab, #logsTab {
             animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -443,7 +438,64 @@
             transform: rotate(90deg) scale(0.95);
         }
         
-        /* Logs Tab */
+        .logs-header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .logs-header-actions.edit-mode {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        
+        .select-all-btn, .delete-selected-btn, .cancel-edit-btn {
+            padding: 0.625rem 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .logs-header-actions.edit-mode .select-all-btn,
+        .logs-header-actions.edit-mode .delete-selected-btn,
+        .logs-header-actions.edit-mode .cancel-edit-btn {
+            display: block;
+        }
+        
+        .select-all-btn:hover, .cancel-edit-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .select-all-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+        
+        .delete-selected-btn {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+        
+        .delete-selected-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .cancel-edit-btn {
+            background: var(--bg-elevated);
+            border-color: var(--border-bright);
+        }
+        
         .logs-container {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -476,6 +528,33 @@
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.9rem;
             animation: slideInLeft 0.3s ease;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .log-entry.selectable {
+            cursor: pointer;
+        }
+        
+        .log-entry.selectable:hover {
+            background: var(--bg-card);
+            transform: translateX(4px);
+        }
+        
+        .log-entry.selected {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: var(--danger);
+        }
+        
+        .log-entry.selected::before {
+            content: '✓';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 1.2rem;
         }
         
         @keyframes slideInLeft {
@@ -548,7 +627,6 @@
             color: var(--text-dim);
         }
         
-        /* Filter Popup */
         .filter-popup-content {
             background: var(--bg-card);
             padding: 2rem;
@@ -634,7 +712,6 @@
             content: '✕';
         }
         
-        /* Scripts Container */
         #scriptsContainer {
             display: grid;
             gap: 1.75rem;
@@ -822,7 +899,6 @@
             transform: translateY(-2px);
         }
         
-        /* Popup/Modal */
         .popup {
             position: fixed;
             inset: 0;
@@ -1005,7 +1081,6 @@
             transform: translateY(-2px);
         }
         
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -1052,7 +1127,6 @@
             color: var(--danger);
         }
         
-        /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -1080,7 +1154,6 @@
             }
         }
         
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 6rem 2rem;
@@ -1099,32 +1172,36 @@
             font-size: 1.1rem;
         }
         
-        /* Responsive */
         @media (max-width: 768px) {
             .navbar {
                 padding: 1rem 1.5rem;
-                flex-wrap: wrap;
             }
             
             .tabs {
-                flex-wrap: wrap;
-                width: 100%;
-                justify-content: center;
-                margin-bottom: 0.75rem;
+                gap: 0.5rem;
             }
             
-            .social-buttons {
-                width: 100%;
-                justify-content: center;
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .discord-icon-btn, .youtube-icon-btn {
+                width: 38px;
+                height: 38px;
+            }
+            
+            .discord-icon, .youtube-icon {
+                width: 18px;
+                height: 18px;
             }
             
             #mainTab {
-                padding: 4rem 1rem;
+                padding: 3rem 1rem;
             }
             
             #mainTab h1 {
-                font-size: 3rem;
-                word-break: break-word;
+                font-size: 2.5rem;
             }
             
             #scriptsContainer {
@@ -1191,7 +1268,7 @@
             .add-btn {
                 width: 48px;
                 height: 48px;
-                font-size: 28px;
+                font-size: 24px;
             }
             
             .popup-content {
@@ -1203,12 +1280,34 @@
                 width: 95%;
                 padding: 1.5rem;
             }
+            
+            .logs-container {
+                max-height: 60vh;
+            }
+            
+            .logs-header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .logs-header-actions.edit-mode {
+                justify-content: space-between;
+            }
+            
+            .select-all-btn, .delete-selected-btn, .cancel-edit-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .log-entry {
+                padding: 0.875rem;
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="tabs">
             <div class="tab active" data-tab="main">Main</div>
@@ -1232,9 +1331,7 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="content">
-        <!-- Main Tab -->
         <section id="mainTab">
             <h1>KittyScripts</h1>
             <div class="logo-container">
@@ -1250,7 +1347,6 @@
             </p>
         </section>
 
-        <!-- Scripts Tab -->
         <section id="scriptsTab" style="display: none;">
             <div class="script-header">
                 <div class="header-left">
@@ -1276,11 +1372,15 @@
             <div id="scriptsContainer"></div>
         </section>
 
-        <!-- Logs Tab -->
         <section id="logsTab" style="display: none;">
             <div class="script-header">
                 <h2>Activity Logs</h2>
-                <button class="add-btn" id="clearLogsBtn" aria-label="Clear all logs" style="font-size: 20px;">🗑️</button>
+                <div class="logs-header-actions" id="logsHeaderActions">
+                    <button class="add-btn" id="clearLogsBtn" aria-label="Edit logs" style="font-size: 20px;">🗑️</button>
+                    <button class="select-all-btn" id="selectAllBtn">Select All</button>
+                    <button class="delete-selected-btn" id="deleteSelectedBtn">Delete Selected</button>
+                    <button class="cancel-edit-btn" id="cancelEditBtn">Cancel</button>
+                </div>
             </div>
             <div class="logs-container" id="logsContainer">
                 <div class="empty-logs">
@@ -1291,7 +1391,6 @@
         </section>
     </main>
 
-    <!-- Password Popup -->
     <div class="popup" id="passwordPopup">
         <div class="popup-content">
             <h3>Admin Access</h3>
@@ -1303,7 +1402,6 @@
         </div>
     </div>
 
-    <!-- Add/Edit Script Popup -->
     <div class="popup" id="addPopup">
         <div class="popup-content">
             <h3 id="popupTitle">Add New Script</h3>
@@ -1328,7 +1426,6 @@
         </div>
     </div>
 
-    <!-- Filter Popup -->
     <div class="popup" id="filterPopup">
         <div class="filter-popup-content">
             <h3>Filter</h3>
@@ -1350,18 +1447,15 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div class="toast" id="toast">
         <span class="toast-icon">✓</span>
         <span class="toast-message"></span>
     </div>
 
-    <!-- Firebase & App Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, push, remove, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, push, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
             authDomain: "kittyscriptsweb.firebaseapp.com",
@@ -1371,28 +1465,25 @@
             appId: "1:866548422450:web:a327c122f0d8e57fa1e92b"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Admin passwords
         const ADMIN_PASSWORDS = ["i miss m.", "avalarson"];
         
-        // State management
         let actionType = null;
         let pendingDeleteKey = null;
         let editingScriptKey = null;
         let isUniversal = false;
         let hasKeySystem = false;
-        let previousScriptState = null; // For tracking tag changes
+        let previousScriptState = null;
+        let selectedLogs = new Set();
+        let isEditMode = false;
         
-        // Filter state
         let filters = {
             universal: 'any',
             keySystem: 'any'
         };
 
-        // DOM Elements
         const mainTab = document.getElementById('mainTab');
         const scriptsTab = document.getElementById('scriptsTab');
         const logsTab = document.getElementById('logsTab');
@@ -1413,8 +1504,11 @@
         const filterKeySystem = document.getElementById('filterKeySystem');
         const popupTitle = document.getElementById('popupTitle');
         const addBtn = document.getElementById('addBtn');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const logsHeaderActions = document.getElementById('logsHeaderActions');
 
-        // Logging Functions
         function addLog(action, scriptName, details = '') {
             const timestamp = Date.now();
             const logEntry = {
@@ -1457,6 +1551,20 @@
             return date.toLocaleString();
         }
 
+        function enterEditMode() {
+            isEditMode = true;
+            selectedLogs.clear();
+            logsHeaderActions.classList.add('edit-mode');
+            renderLogs();
+        }
+
+        function exitEditMode() {
+            isEditMode = false;
+            selectedLogs.clear();
+            logsHeaderActions.classList.remove('edit-mode');
+            renderLogs();
+        }
+
         function renderLogs() {
             onValue(ref(db, 'logs'), (snapshot) => {
                 logsContainer.innerHTML = '';
@@ -1468,6 +1576,8 @@
                             <p>Actions will appear here</p>
                         </div>
                     `;
+                    selectedLogs.clear();
+                    updateSelectAllButton();
                     return;
                 }
                 
@@ -1476,12 +1586,19 @@
                     logs.push({ key: child.key, ...child.val() });
                 });
                 
-                // Sort by timestamp (newest first)
                 logs.sort((a, b) => b.timestamp - a.timestamp);
                 
                 logs.forEach(log => {
                     const logEntry = document.createElement('div');
                     logEntry.className = `log-entry ${log.action}`;
+                    logEntry.dataset.key = log.key;
+                    
+                    if (isEditMode) {
+                        logEntry.classList.add('selectable');
+                        if (selectedLogs.has(log.key)) {
+                            logEntry.classList.add('selected');
+                        }
+                    }
                     
                     let actionText = '';
                     switch(log.action) {
@@ -1509,16 +1626,103 @@
                         ${log.details ? `<div class="log-details">${log.details}</div>` : ''}
                     `;
                     
+                    if (isEditMode) {
+                        logEntry.addEventListener('click', () => {
+                            toggleLogSelection(log.key);
+                        });
+                    }
+                    
                     logsContainer.appendChild(logEntry);
                 });
+                
+                updateSelectAllButton();
             });
         }
 
-        // Clean old logs on page load
+        function toggleLogSelection(key) {
+            if (!isEditMode) return;
+            
+            if (selectedLogs.has(key)) {
+                selectedLogs.delete(key);
+            } else {
+                selectedLogs.add(key);
+            }
+            
+            const logEntry = logsContainer.querySelector(`[data-key="${key}"]`);
+            if (logEntry) {
+                logEntry.classList.toggle('selected');
+            }
+            
+            updateSelectAllButton();
+        }
+
+        function updateSelectAllButton() {
+            if (!isEditMode) return;
+            
+            const allLogs = logsContainer.querySelectorAll('.log-entry');
+            if (allLogs.length === 0) {
+                selectAllBtn.classList.remove('active');
+                return;
+            }
+            
+            if (selectedLogs.size === allLogs.length) {
+                selectAllBtn.classList.add('active');
+                selectAllBtn.textContent = 'Deselect All';
+            } else {
+                selectAllBtn.classList.remove('active');
+                selectAllBtn.textContent = 'Select All';
+            }
+        }
+
+        selectAllBtn.addEventListener('click', () => {
+            const allLogs = logsContainer.querySelectorAll('.log-entry');
+            
+            if (selectedLogs.size === allLogs.length) {
+                selectedLogs.clear();
+                allLogs.forEach(log => log.classList.remove('selected'));
+            } else {
+                allLogs.forEach(log => {
+                    const key = log.dataset.key;
+                    selectedLogs.add(key);
+                    log.classList.add('selected');
+                });
+            }
+            
+            updateSelectAllButton();
+        });
+
+        deleteSelectedBtn.addEventListener('click', () => {
+            if (selectedLogs.size === 0) {
+                showToast('No logs selected', 'error');
+                return;
+            }
+            
+            let deleteCount = 0;
+            const totalToDelete = selectedLogs.size;
+            
+            selectedLogs.forEach(logKey => {
+                remove(ref(db, 'logs/' + logKey))
+                    .then(() => {
+                        deleteCount++;
+                        if (deleteCount === totalToDelete) {
+                            showToast(`${totalToDelete} log(s) deleted successfully`, 'success');
+                            selectedLogs.clear();
+                            exitEditMode();
+                        }
+                    })
+                    .catch(error => {
+                        showToast('Error deleting logs: ' + error.message, 'error');
+                    });
+            });
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            exitEditMode();
+        });
+
         cleanOldLogs();
         renderLogs();
 
-        // Utility Functions
         function showPopup(popup) {
             popup.classList.add('show');
         }
@@ -1603,7 +1807,6 @@
             }
         }
 
-        // Tab Navigation
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const tabName = tab.dataset.tab;
@@ -1614,10 +1817,13 @@
                 mainTab.style.display = tabName === 'main' ? 'block' : 'none';
                 scriptsTab.style.display = tabName === 'scripts' ? 'block' : 'none';
                 logsTab.style.display = tabName === 'logs' ? 'block' : 'none';
+                
+                if (tabName !== 'logs' && isEditMode) {
+                    exitEditMode();
+                }
             });
         });
 
-        // Checkbox toggle in add/edit popup
         universalCheckbox.addEventListener('click', () => {
             isUniversal = !isUniversal;
             universalCheckbox.classList.toggle('checked');
@@ -1628,7 +1834,6 @@
             keySystemCheckbox.classList.toggle('checked');
         });
 
-        // Filter checkbox cycling
         function cycleFilterCheckbox(element, filterKey) {
             const currentState = filters[filterKey];
             
@@ -1655,18 +1860,15 @@
             cycleFilterCheckbox(filterKeySystem, 'keySystem');
         });
 
-        // Filter button
         filterBtn.addEventListener('click', () => {
             showPopup(filterPopup);
         });
 
-        // Apply filters
         document.getElementById('applyFilters').addEventListener('click', () => {
             hidePopup(filterPopup);
             filterScripts();
         });
 
-        // Clear filters
         document.getElementById('clearFilters').addEventListener('click', () => {
             filters.universal = 'any';
             filters.keySystem = 'any';
@@ -1678,21 +1880,18 @@
             filterScripts();
         });
 
-        // Add Script Button
         document.getElementById('addScriptBtn').addEventListener('click', () => {
             actionType = 'add';
             showPopup(passwordPopup);
             setTimeout(() => adminPass.focus(), 100);
         });
 
-        // Clear Logs Button
         document.getElementById('clearLogsBtn').addEventListener('click', () => {
             actionType = 'clear-logs';
             showPopup(passwordPopup);
             setTimeout(() => adminPass.focus(), 100);
         });
 
-        // Password Confirmation
         document.getElementById('confirmPasswordBtn').addEventListener('click', () => {
             const password = adminPass.value.trim();
             
@@ -1708,7 +1907,6 @@
                 showPopup(addPopup);
                 setTimeout(() => scriptName.focus(), 100);
             } else if (actionType === 'delete' && pendingDeleteKey) {
-                // Get script name before deleting
                 onValue(ref(db, 'scripts/' + pendingDeleteKey), (snapshot) => {
                     if (snapshot.exists()) {
                         const script = snapshot.val();
@@ -1724,24 +1922,17 @@
                     }
                 }, { onlyOnce: true });
             } else if (actionType === 'clear-logs') {
-                // Clear all logs
-                onValue(ref(db, 'logs'), (snapshot) => {
-                    if (snapshot.exists()) {
-                        remove(ref(db, 'logs'))
-                            .then(() => {
-                                showToast('All logs cleared successfully', 'success');
-                            })
-                            .catch(error => {
-                                showToast('Error clearing logs: ' + error.message, 'error');
-                            });
-                    } else {
-                        showToast('No logs to clear', 'error');
-                    }
-                }, { onlyOnce: true });
+                enterEditMode();
+            }
+            
+            if (actionType === 'edit' && window.tempEditData) {
+                setTimeout(() => {
+                    loadEditData(window.tempEditData);
+                    delete window.tempEditData;
+                }, 100);
             }
         });
 
-        // Cancel Password
         document.getElementById('cancelPasswordBtn').addEventListener('click', () => {
             hidePopup(passwordPopup);
             clearInputs();
@@ -1749,7 +1940,6 @@
             pendingDeleteKey = null;
         });
 
-        // Add or Edit Script
         document.getElementById('addBtn').addEventListener('click', () => {
             const name = scriptName.value.trim();
             const code = scriptCode.value.trim();
@@ -1768,10 +1958,8 @@
             };
             
             if (editingScriptKey) {
-                // Update existing script
                 update(ref(db, 'scripts/' + editingScriptKey), scriptData)
                     .then(() => {
-                        // Check for tag changes
                         if (previousScriptState) {
                             if (isUniversal && !previousScriptState.isUniversal) {
                                 addLog('tag-added', name, 'Added: Universal');
@@ -1795,7 +1983,6 @@
                         showToast('Error updating script: ' + error.message, 'error');
                     });
             } else {
-                // Add new script
                 push(ref(db, 'scripts'), scriptData)
                     .then(() => {
                         addLog('created', name);
@@ -1809,13 +1996,11 @@
             }
         });
 
-        // Cancel Add/Edit
         document.getElementById('cancelAddBtn').addEventListener('click', () => {
             hidePopup(addPopup);
             clearInputs();
         });
 
-        // Copy Script Code
         window.copyScript = async (code) => {
             try {
                 if (navigator.clipboard && window.isSecureContext) {
@@ -1836,18 +2021,15 @@
                         showToast('Code copied to clipboard!', 'success');
                     } catch (err) {
                         showToast('Failed to copy code', 'error');
-                        console.error('Copy failed:', err);
                     }
                     
                     textArea.remove();
                 }
             } catch (err) {
                 showToast('Failed to copy code', 'error');
-                console.error('Copy failed:', err);
             }
         };
 
-        // Request Edit
         window.requestEdit = (key, scriptData) => {
             editingScriptKey = key;
             actionType = 'edit';
@@ -1860,7 +2042,6 @@
             setTimeout(() => adminPass.focus(), 100);
         };
 
-        // Load script data into edit form after authentication
         function loadEditData(scriptData) {
             scriptName.value = scriptData.name;
             scriptCode.value = scriptData.code;
@@ -1874,17 +2055,6 @@
             addBtn.textContent = 'Update Script';
         }
 
-        // Override password confirmation to handle edit
-        document.getElementById('confirmPasswordBtn').addEventListener('click', () => {
-            if (actionType === 'edit' && window.tempEditData) {
-                setTimeout(() => {
-                    loadEditData(window.tempEditData);
-                    delete window.tempEditData;
-                }, 100);
-            }
-        });
-
-        // Request Delete
         window.requestDelete = (key) => {
             pendingDeleteKey = key;
             actionType = 'delete';
@@ -1892,7 +2062,6 @@
             setTimeout(() => adminPass.focus(), 100);
         };
 
-        // Render Scripts from Firebase
         onValue(ref(db, 'scripts'), (snapshot) => {
             scriptsContainer.innerHTML = '';
             
@@ -1952,7 +2121,6 @@
                 scriptsContainer.appendChild(scriptCard);
             });
             
-            // Add event listeners
             document.querySelectorAll('[data-action="copy"]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const card = e.target.closest('.script-card');
@@ -1985,10 +2153,8 @@
             filterScripts();
         });
 
-        // Search functionality
         searchInput.addEventListener('input', filterScripts);
 
-        // Close popups on background click
         [passwordPopup, addPopup, filterPopup].forEach(popup => {
             popup.addEventListener('click', (e) => {
                 if (e.target === popup) {
@@ -2002,7 +2168,6 @@
             });
         });
 
-        // Enhanced keyboard support
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (passwordPopup.classList.contains('show')) {
@@ -2011,6 +2176,8 @@
                     document.getElementById('cancelAddBtn').click();
                 } else if (filterPopup.classList.contains('show')) {
                     hidePopup(filterPopup);
+                } else if (isEditMode) {
+                    exitEditMode();
                 }
             }
 
@@ -2029,4 +2196,4 @@
         });
     </script>
 </body>
-    </html>
+</html>
