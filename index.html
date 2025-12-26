@@ -1547,7 +1547,7 @@
             <div class="online-counter">
                 <div class="online-dot"></div>
                 <span class="online-text">
-                    <span class="online-count" id="onlineCount">...</span> online
+                    <span class="online-count" id="onlineCount">0</span> online
                 </span>
             </div>
 
@@ -1750,7 +1750,7 @@
         const presenceRef = ref(db, 'presence');
         onValue(presenceRef, (snapshot) => {
             const count = snapshot.exists() ? snapshot.numChildren() : 0;
-            onlineCountElement.textContent = count;
+            onlineCountElement.textContent = count.toString();
         });
 
         function addLog(action, scriptName, details = '') {
