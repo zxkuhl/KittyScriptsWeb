@@ -1736,12 +1736,19 @@
         });
 
         // Online Users Presence System
-        const myConnectionsRef = ref(db, `presence/${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+        const myUserId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const myConnectionsRef = ref(db, `presence/${myUserId}`);
         const connectedRef = ref(db, '.info/connected');
         
         onValue(connectedRef, (snap) => {
             if (snap.val() === true) {
-                set(myConnectionsRef, true);
+                // Set presence
+                set(myConnectionsRef, {
+                    online: true,
+                    timestamp: Date.now()
+                });
+                
+                // Remove on disconnect
                 onDisconnect(myConnectionsRef).remove();
             }
         });
@@ -1749,7 +1756,10 @@
         // Count online users
         const presenceRef = ref(db, 'presence');
         onValue(presenceRef, (snapshot) => {
-            const count = snapshot.exists() ? snapshot.numChildren() : 0;
+            let count = 0;
+            if (snapshot.exists()) {
+                count = snapshot.numChildren();
+            }
             onlineCountElement.textContent = count.toString();
         });
 
