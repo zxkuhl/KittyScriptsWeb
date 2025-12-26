@@ -148,6 +148,11 @@
             opacity: 0;
         }
         
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
         .discord-btn {
             display: flex;
             align-items: center;
@@ -192,6 +197,53 @@
         }
         
         .discord-icon {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+        
+        .youtube-icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border: none;
+            padding: 0.625rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(255, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+            width: 44px;
+            height: 44px;
+        }
+        
+        .youtube-icon-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .youtube-icon-btn:hover::before {
+            left: 100%;
+        }
+        
+        .youtube-icon-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(255, 0, 0, 0.4);
+        }
+        
+        .youtube-icon-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .youtube-icon {
             width: 20px;
             height: 20px;
             fill: white;
@@ -815,12 +867,22 @@
             <div class="tab active" data-tab="main">Main</div>
             <div class="tab" data-tab="scripts">Scripts</div>
         </div>
-        <button class="discord-btn" onclick="window.open('https://discord.gg/KPUPp4m9pJ', '_blank')">
-            <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
-                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
-            </svg>
-            Discord
-        </button>
+        <div class="social-buttons">
+            <button class="discord-btn" onclick="window.open('https://discord.gg/KPUPp4m9pJ', '_blank')">
+                <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+                Discord
+            </button>
+            <button class="youtube-icon-btn" onclick="window.open('https://www.youtube.com/@KittyScriptsRBLX', '_blank')" aria-label="YouTube">
+                <svg class="youtube-icon" viewBox="0 0 461.001 461.001" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M365.257,67.393H95.744C42.866,67.393,0,110.259,0,163.137v134.728
+                        c0,52.878,42.866,95.744,95.744,95.744h269.513c52.878,0,95.744-42.866,95.744-95.744V163.137
+                        C461.001,110.259,418.135,67.393,365.257,67.393z M300.506,237.056l-126.06,60.123c-3.359,1.602-7.239-0.847-7.239-4.568V168.607
+                        c0-3.774,3.982-6.22,7.348-4.512l126.06,63.881C304.563,229.873,304.464,235.423,300.506,237.056z"/>
+                </svg>
+            </button>
+        </div>
     </nav>
 
     <!-- Main Content -->
