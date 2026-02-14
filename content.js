@@ -1,6 +1,5 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KittyScripts - Script Hub</title>
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="Script hub for Roblox scripts - simple, clean, and powerful">
