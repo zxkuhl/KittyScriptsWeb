@@ -1,0 +1,2667 @@
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KittyScripts - Script Hub</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Script hub for Roblox scripts - simple, clean, and powerful">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KittyScripts">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #08080a;
+            --bg-elevated: #0e0e12;
+            --bg-card: #13131a;
+            --accent-primary: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.2);
+            --accent-bright: #818cf8;
+            --text-primary: #f8f8f9;
+            --text-muted: #8b8d98;
+            --text-dim: #6b6d78;
+            --border-subtle: #1a1a24;
+            --border-bright: #2a2a3a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        [data-theme="light"] {
+            --bg-base: #ffffff;
+            --bg-elevated: #f8f9fa;
+            --bg-card: #ffffff;
+            --accent-primary: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --accent-bright: #818cf8;
+            --text-primary: #1a1a1a;
+            --text-muted: #6b6d78;
+            --text-dim: #9ca3af;
+            --border-subtle: #e5e7eb;
+            --border-bright: #d1d5db;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, var(--accent-glow) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(5%, 5%) rotate(120deg); }
+            66% { transform: translate(-5%, 5%) rotate(240deg); }
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 12px 32px var(--accent-glow);
+        }
+
+        .theme-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle .sun-icon {
+            display: none;
+        }
+
+        .theme-toggle .moon-icon {
+            display: block;
+        }
+
+        [data-theme="light"] .theme-toggle .sun-icon {
+            display: block;
+        }
+
+        [data-theme="light"] .theme-toggle .moon-icon {
+            display: none;
+        }
+        
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 3rem;
+            backdrop-filter: blur(20px) saturate(180%);
+            background: rgba(14, 14, 18, 0.8);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="light"] .navbar {
+            background: rgba(248, 249, 250, 0.95);
+        }
+        
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent,
+                var(--accent-primary) 30%,
+                var(--accent-primary) 70%,
+                transparent
+            );
+            opacity: 0.3;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.75rem;
+            position: relative;
+        }
+        
+        .tab {
+            padding: 0.625rem 1.5rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            position: relative;
+            border: 1px solid transparent;
+            background: transparent;
+        }
+        
+        .tab::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tab:hover::before {
+            opacity: 0.5;
+        }
+        
+        .tab:hover {
+            color: var(--accent-bright);
+            transform: translateY(-1px);
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            color: white;
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+        
+        .tab.active::before {
+            opacity: 0;
+        }
+        
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .discord-icon-btn, .youtube-icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            padding: 0.625rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            width: 44px;
+            height: 44px;
+        }
+        
+        .discord-icon-btn {
+            background: linear-gradient(135deg, #5865f2, #7289da);
+            box-shadow: 0 4px 16px rgba(88, 101, 242, 0.25);
+        }
+        
+        .youtube-icon-btn {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            box-shadow: 0 4px 16px rgba(255, 0, 0, 0.25);
+        }
+        
+        .discord-icon-btn::before, .youtube-icon-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .discord-icon-btn:hover::before, .youtube-icon-btn:hover::before {
+            left: 100%;
+        }
+        
+        .discord-icon-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
+        }
+        
+        .youtube-icon-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(255, 0, 0, 0.4);
+        }
+        
+        .discord-icon-btn:active, .youtube-icon-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .discord-icon, .youtube-icon {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .install-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            border: none;
+            padding: 0.625rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .install-btn.show {
+            display: flex;
+        }
+
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .install-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+        
+        .content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #mainTab {
+            text-align: center;
+            padding: 6rem 2rem;
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #mainTab h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, 
+                var(--accent-bright) 0%,
+                var(--accent-primary) 30%,
+                #8b5cf6 60%,
+                var(--accent-primary) 100%
+            );
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientFlow 8s ease infinite;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+        
+        @keyframes gradientFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .logo-container {
+            position: relative;
+            display: inline-block;
+            margin: 2rem 0;
+        }
+        
+        .logo-container::before {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 3s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        #mainTab img {
+            width: 240px;
+            height: auto;
+            border-radius: 24px;
+            box-shadow: 
+                0 0 60px var(--accent-glow),
+                0 20px 60px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-bright);
+        }
+        
+        #mainTab img:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 
+                0 0 80px var(--accent-glow),
+                0 30px 80px rgba(0, 0, 0, 0.6);
+        }
+        
+        .online-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .online-counter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .online-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .online-text {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .online-count {
+            font-weight: 800;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-top: 2rem;
+        }
+        
+        .tagline span {
+            display: inline-block;
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+        }
+        
+        .tagline span:nth-child(1) { animation-delay: 0.2s; }
+        .tagline span:nth-child(2) { animation-delay: 0.3s; color: var(--accent-bright); }
+        .tagline span:nth-child(3) { animation-delay: 0.4s; }
+        .tagline span:nth-child(4) { animation-delay: 0.5s; color: var(--accent-bright); }
+        .tagline span:nth-child(5) { animation-delay: 0.6s; }
+        
+        #scriptsTab, #logsTab {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+        
+        .script-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), transparent);
+        }
+        
+        .script-header h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .search-input {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 200px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            width: 250px;
+        }
+        
+        .search-input::placeholder {
+            color: var(--text-dim);
+        }
+        
+        .filter-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .filter-btn.active {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: white;
+        }
+        
+        .add-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            color: white;
+            font-size: 32px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: -1;
+            filter: blur(10px);
+        }
+        
+        .add-btn:hover::before {
+            opacity: 1;
+        }
+        
+        .add-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 12px 32px var(--accent-glow);
+        }
+        
+        .add-btn:active {
+            transform: rotate(90deg) scale(0.95);
+        }
+        
+        .logs-header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .logs-header-actions.edit-mode {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        
+        .select-all-btn, .delete-selected-btn, .cancel-edit-btn {
+            padding: 0.625rem 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .logs-header-actions.edit-mode .select-all-btn,
+        .logs-header-actions.edit-mode .delete-selected-btn,
+        .logs-header-actions.edit-mode .cancel-edit-btn {
+            display: block;
+        }
+        
+        .select-all-btn:hover, .cancel-edit-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .select-all-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+        
+        .delete-selected-btn {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+        
+        .delete-selected-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .cancel-edit-btn {
+            background: var(--bg-elevated);
+            border-color: var(--border-bright);
+        }
+        
+        .logs-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .logs-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .logs-container::-webkit-scrollbar-track {
+            background: var(--bg-elevated);
+            border-radius: 4px;
+        }
+        
+        .logs-container::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+        
+        .log-entry {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--accent-primary);
+            border-radius: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            animation: slideInLeft 0.3s ease;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .log-entry.selectable {
+            cursor: pointer;
+        }
+        
+        .log-entry.selectable:hover {
+            background: var(--bg-card);
+            transform: translateX(4px);
+        }
+        
+        .log-entry.selected {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: var(--danger);
+        }
+        
+        .log-entry.selected::before {
+            content: '✓';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .log-entry.created {
+            border-left-color: var(--success);
+        }
+        
+        .log-entry.edited {
+            border-left-color: var(--warning);
+        }
+        
+        .log-entry.deleted {
+            border-left-color: var(--danger);
+        }
+        
+        .log-entry.tag-added {
+            border-left-color: var(--info);
+        }
+        
+        .log-entry.tag-removed {
+            border-left-color: var(--text-muted);
+        }
+        
+        .log-timestamp {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-action {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .log-entry.created .log-action {
+            color: var(--success);
+        }
+        
+        .log-entry.edited .log-action {
+            color: var(--warning);
+        }
+        
+        .log-entry.deleted .log-action {
+            color: var(--danger);
+        }
+        
+        .log-entry.tag-added .log-action,
+        .log-entry.tag-removed .log-action {
+            color: var(--info);
+        }
+        
+        .log-details {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .empty-logs {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-dim);
+        }
+        
+        .filter-popup-content {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--border-bright);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            animation: slideUpBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 1001;
+            pointer-events: auto;
+        }
+        
+        .filter-popup-content h3 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+        
+        .filter-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .filter-option:hover {
+            border-color: var(--border-bright);
+        }
+        
+        .filter-option label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .filter-checkbox {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border-bright);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .filter-checkbox.checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        
+        .filter-checkbox.unchecked {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        .filter-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .filter-checkbox.checked::after,
+        .filter-checkbox.unchecked::after {
+            opacity: 1;
+        }
+        
+        .filter-checkbox.unchecked::after {
+            content: '✕';
+        }
+        
+        #scriptsContainer {
+            display: grid;
+            gap: 1.75rem;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+        }
+        
+        .script-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            padding: 2rem;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .script-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent,
+                var(--accent-primary),
+                transparent
+            );
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .script-card:hover::before {
+            opacity: 1;
+        }
+        
+        .script-card:hover {
+            border-color: var(--border-bright);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        .script-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+        
+        .script-card strong {
+            font-size: 1.35rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        
+        .script-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge.universal {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .badge.key-system {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .script-card pre {
+            background: var(--bg-elevated);
+            padding: 1.25rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 1.25rem;
+            max-height: 320px;
+            overflow-y: auto;
+            color: var(--text-muted);
+        }
+        
+        .script-card pre::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .script-card pre::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .script-card pre::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
+        }
+        
+        .script-card pre::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-bright);
+        }
+        
+        .script-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .script-card button {
+            padding: 0.625rem 1rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .script-card button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .script-card button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .copy-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+        
+        .edit-btn {
+            background: var(--bg-elevated);
+            color: var(--warning);
+            border: 1px solid var(--border-bright);
+        }
+        
+        .edit-btn:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--warning);
+            transform: translateY(-2px);
+        }
+        
+        .delete-btn {
+            background: var(--bg-elevated);
+            color: var(--danger);
+            border: 1px solid var(--border-bright);
+        }
+        
+        .delete-btn:hover {
+            background: var(--danger);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px) saturate(120%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .popup.show {
+            display: flex;
+        }
+        
+        .popup-content {
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 480px;
+            border: 1px solid var(--border-bright);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            animation: slideUpBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 1001;
+            pointer-events: auto;
+        }
+        
+        .popup-content::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent-primary), transparent, var(--accent-bright));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            z-index: -1;
+        }
+        
+        .popup-content h3 {
+            margin-bottom: 2rem;
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        
+        .popup input,
+        .popup textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1001;
+        }
+        
+        .popup input:focus,
+        .popup textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        
+        .popup textarea {
+            min-height: 140px;
+            font-family: 'IBM Plex Mono', monospace;
+            resize: vertical;
+        }
+        
+        .thumbnail-upload {
+            margin-bottom: 1.25rem;
+        }
+        
+        .thumbnail-upload label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .thumbnail-input-wrapper {
+            position: relative;
+        }
+        
+        .thumbnail-input {
+            display: none;
+        }
+        
+        .thumbnail-upload-btn {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-elevated);
+            border: 2px dashed var(--border-bright);
+            border-radius: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+            display: block;
+        }
+        
+        .thumbnail-upload-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .thumbnail-preview {
+            margin-top: 1rem;
+            max-height: 200px;
+            width: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            display: none;
+        }
+        
+        .thumbnail-preview.show {
+            display: block;
+        }
+        
+        .script-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+        }
+        
+        .script-thumbnail.placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            font-size: 3rem;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .checkbox-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .checkbox-item:hover {
+            border-color: var(--accent-primary);
+        }
+        
+        .checkbox-item.checked {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .checkbox-item label {
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-bright);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .checkbox-item.checked .custom-checkbox {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+        
+        .custom-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .checkbox-item.checked .custom-checkbox::after {
+            opacity: 1;
+        }
+        
+        .popup-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .popup button {
+            flex: 1;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+        }
+        
+        .confirm-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-bright));
+            color: white;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+        
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--accent-glow);
+        }
+        
+        .cancel-btn {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-bright);
+        }
+        
+        .cancel-btn:hover {
+            background: var(--bg-base);
+            transform: translateY(-2px);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            pointer-events: none;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        .toast.success {
+            border-color: var(--success);
+        }
+        
+        .toast.error {
+            border-color: var(--danger);
+        }
+        
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .toast.success .toast-icon {
+            color: var(--success);
+        }
+        
+        .toast.error .toast-icon {
+            color: var(--danger);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideUpBounce {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 6rem 2rem;
+            color: var(--text-dim);
+        }
+        
+        .empty-state h3 {
+            margin-top: 1.5rem;
+            font-size: 1.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+        
+        .empty-state p {
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem 1.5rem;
+            }
+            
+            .tabs {
+                gap: 0.5rem;
+            }
+            
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .discord-icon-btn, .youtube-icon-btn {
+                width: 38px;
+                height: 38px;
+            }
+            
+            .discord-icon, .youtube-icon {
+                width: 18px;
+                height: 18px;
+            }
+            
+            #mainTab {
+                padding: 3rem 1rem;
+            }
+            
+            #mainTab h1 {
+                font-size: 2.5rem;
+            }
+
+            .online-counter {
+                font-size: 0.85rem;
+                padding: 0.625rem 1.25rem;
+            }
+
+            .online-dot {
+                width: 10px;
+                height: 10px;
+            }
+            
+            #scriptsContainer {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 2rem 1rem;
+            }
+            
+            .script-card {
+                padding: 1.5rem;
+            }
+            
+            .toast {
+                right: 1rem;
+                left: 1rem;
+                bottom: 6rem;
+            }
+
+            .theme-toggle {
+                bottom: 1rem;
+                right: 1rem;
+                width: 48px;
+                height: 48px;
+            }
+
+            .theme-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .header-left {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+                width: 100%;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .search-input:focus {
+                width: 100%;
+            }
+            
+            .filter-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .script-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .script-header h2 {
+                font-size: 2rem;
+            }
+            
+            .script-badges {
+                margin-top: 0.5rem;
+            }
+            
+            .script-actions {
+                flex-wrap: wrap;
+            }
+            
+            .script-card button {
+                flex: 1 1 calc(50% - 0.375rem);
+                min-width: 100px;
+            }
+            
+            .add-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+            
+            .popup-content {
+                width: 95%;
+                padding: 2rem 1.5rem;
+            }
+            
+            .filter-popup-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+            
+            .logs-container {
+                max-height: 60vh;
+            }
+            
+            .logs-header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .logs-header-actions.edit-mode {
+                justify-content: space-between;
+            }
+            
+            .select-all-btn, .delete-selected-btn, .cancel-edit-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .log-entry {
+                padding: 0.875rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg class="moon-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg class="sun-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+        </svg>
+    </button>
+
+    <nav class="navbar">
+        <div class="tabs">
+            <div class="tab active" data-tab="main">Main</div>
+            <div class="tab" data-tab="scripts">Scripts</div>
+            <div class="tab" data-tab="logs">Logs</div>
+        </div>
+        <div class="social-buttons">
+            <button class="install-btn" id="installBtn" aria-label="Install App">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Install
+            </button>
+            <button class="discord-icon-btn" onclick="window.open('https://discord.gg/KPUPp4m9pJ', '_blank')" aria-label="Discord">
+                <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                </svg>
+            </button>
+            <button class="youtube-icon-btn" onclick="window.open('https://www.youtube.com/@KittyScriptsRBLX', '_blank')" aria-label="YouTube">
+                <svg class="youtube-icon" viewBox="0 0 461.001 461.001" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M365.257,67.393H95.744C42.866,67.393,0,110.259,0,163.137v134.728
+                        c0,52.878,42.866,95.744,95.744,95.744h269.513c52.878,0,95.744-42.866,95.744-95.744V163.137
+                        C461.001,110.259,418.135,67.393,365.257,67.393z M300.506,237.056l-126.06,60.123c-3.359,1.602-7.239-0.847-7.239-4.568V168.607
+                        c0-3.774,3.982-6.22,7.348-4.512l126.06,63.881C304.563,229.873,304.464,235.423,300.506,237.056z"/>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="content">
+        <section id="mainTab">
+            <h1>KittyScripts</h1>
+            <div class="logo-container">
+                <img src="https://raw.githubusercontent.com/zxkuhl/KittyScriptsWeb/main/KapiNewestIcon.webp" 
+                     alt="KittyScripts Logo">
+            </div>
+            
+            <div class="online-counter">
+                <div class="online-dot"></div>
+                <span class="online-text">
+                    <span class="online-count" id="onlineCount">0</span> online
+                </span>
+            </div>
+
+            <p class="tagline">
+                <span>Script</span>
+                <span> hub</span>
+                <span> •</span>
+                <span> simple</span>
+                <span> • clean</span>
+            </p>
+        </section>
+
+        <section id="scriptsTab" style="display: none;">
+            <div class="script-header">
+                <div class="header-left">
+                    <h2>Scripts</h2>
+                    <input id="searchInput" class="search-input" placeholder="Search scripts..." type="search">
+                    <button class="filter-btn" id="filterBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                            <line x1="17" y1="16" x2="23" y2="16"></line>
+                        </svg>
+                        Filter
+                    </button>
+                </div>
+                <button class="add-btn" id="addScriptBtn" aria-label="Add new script">+</button>
+            </div>
+            <div id="scriptsContainer"></div>
+        </section>
+
+        <section id="logsTab" style="display: none;">
+            <div class="script-header">
+                <h2>Activity Logs</h2>
+                <div class="logs-header-actions" id="logsHeaderActions">
+                    <button class="add-btn" id="clearLogsBtn" aria-label="Edit logs" style="font-size: 20px;">🗑️</button>
+                    <button class="select-all-btn" id="selectAllBtn">Select All</button>
+                    <button class="delete-selected-btn" id="deleteSelectedBtn">Delete Selected</button>
+                    <button class="cancel-edit-btn" id="cancelEditBtn">Cancel</button>
+                </div>
+            </div>
+            <div class="logs-container" id="logsContainer">
+                <div class="empty-logs">
+                    <h3>No activity logs yet</h3>
+                    <p>Actions will appear here</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="popup" id="passwordPopup">
+        <div class="popup-content">
+            <h3>Admin Access</h3>
+            <input type="password" id="adminPass" placeholder="Enter password" autocomplete="off">
+            <div class="popup-actions">
+                <button class="cancel-btn" id="cancelPasswordBtn">Cancel</button>
+                <button class="confirm-btn" id="confirmPasswordBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="popup" id="addPopup">
+        <div class="popup-content">
+            <h3 id="popupTitle">Add New Script</h3>
+            <input id="scriptName" placeholder="Script name" autocomplete="off">
+            <textarea id="scriptCode" placeholder="Paste your script code here..."></textarea>
+            
+            <div class="thumbnail-upload">
+                <label>Thumbnail (Optional)</label>
+                <div class="thumbnail-input-wrapper">
+                    <input type="file" id="thumbnailInput" class="thumbnail-input" accept="image/*">
+                    <label for="thumbnailInput" class="thumbnail-upload-btn">
+                        📷 Choose Image
+                    </label>
+                </div>
+                <img id="thumbnailPreview" class="thumbnail-preview" alt="Thumbnail preview">
+            </div>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item" id="universalCheckbox">
+                    <label>Universal</label>
+                    <div class="custom-checkbox"></div>
+                </div>
+                <div class="checkbox-item" id="keySystemCheckbox">
+                    <label>Key System</label>
+                    <div class="custom-checkbox"></div>
+                </div>
+            </div>
+            
+            <div class="popup-actions">
+                <button class="cancel-btn" id="cancelAddBtn">Cancel</button>
+                <button class="confirm-btn" id="addBtn">Add Script</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="popup" id="filterPopup">
+        <div class="filter-popup-content">
+            <h3>Filter</h3>
+            
+            <div class="filter-option">
+                <label>Universal</label>
+                <div class="filter-checkbox" id="filterUniversal" data-state="any"></div>
+            </div>
+            
+            <div class="filter-option">
+                <label>Key System</label>
+                <div class="filter-checkbox" id="filterKeySystem" data-state="any"></div>
+            </div>
+            
+            <div class="popup-actions" style="margin-top: 1.5rem;">
+                <button class="cancel-btn" id="clearFilters">Clear</button>
+                <button class="confirm-btn" id="applyFilters">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon">✓</span>
+        <span class="toast-message"></span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, push, remove, onValue, update, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7sKnlRbrecC-K591ELNJb27Wl_kwZXAc",
+            authDomain: "kittyscriptsweb.firebaseapp.com",
+            projectId: "kittyscriptsweb",
+            storageBucket: "kittyscriptsweb.appspot.com",
+            messagingSenderId: "866548422450",
+            appId: "1:866548422450:web:a327c122f0d8e57fa1e92b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        const ADMIN_PASSWORDS = ["i miss m.", "i wanna cuddle ava and let her fall asleep on my chest."];
+        
+        let actionType = null;
+        let pendingDeleteKey = null;
+        let editingScriptKey = null;
+        let isUniversal = false;
+        let hasKeySystem = false;
+        let previousScriptState = null;
+        let selectedLogs = new Set();
+        let isEditMode = false;
+        let thumbnailFile = null;
+        let currentThumbnailUrl = null;
+        
+        let filters = {
+            universal: 'any',
+            keySystem: 'any'
+        };
+
+        const mainTab = document.getElementById('mainTab');
+        const scriptsTab = document.getElementById('scriptsTab');
+        const logsTab = document.getElementById('logsTab');
+        const scriptsContainer = document.getElementById('scriptsContainer');
+        const logsContainer = document.getElementById('logsContainer');
+        const passwordPopup = document.getElementById('passwordPopup');
+        const addPopup = document.getElementById('addPopup');
+        const filterPopup = document.getElementById('filterPopup');
+        const adminPass = document.getElementById('adminPass');
+        const scriptName = document.getElementById('scriptName');
+        const scriptCode = document.getElementById('scriptCode');
+        const thumbnailInput = document.getElementById('thumbnailInput');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+        const toast = document.getElementById('toast');
+        const searchInput = document.getElementById('searchInput');
+        const filterBtn = document.getElementById('filterBtn');
+        const universalCheckbox = document.getElementById('universalCheckbox');
+        const keySystemCheckbox = document.getElementById('keySystemCheckbox');
+        const filterUniversal = document.getElementById('filterUniversal');
+        const filterKeySystem = document.getElementById('filterKeySystem');
+        const popupTitle = document.getElementById('popupTitle');
+        const addBtn = document.getElementById('addBtn');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const logsHeaderActions = document.getElementById('logsHeaderActions');
+        const themeToggle = document.getElementById('themeToggle');
+        const onlineCountElement = document.getElementById('onlineCount');
+
+        // Theme Toggle
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Thumbnail preview handler
+        thumbnailInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                    showToast('Image must be less than 5MB', 'error');
+                    thumbnailInput.value = '';
+                    return;
+                }
+                
+                thumbnailFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    thumbnailPreview.src = e.target.result;
+                    thumbnailPreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Online Users Presence System
+        const myUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const myPresenceRef = ref(db, `presence/${myUserId}`);
+        const connectedRef = ref(db, '.info/connected');
+        
+        // Setup presence
+        onValue(connectedRef, (snapshot) => {
+            if (snapshot.val() === true) {
+                // User is connected
+                const presenceData = {
+                    online: true,
+                    lastSeen: Date.now()
+                };
+                
+                // Set user as online
+                set(myPresenceRef, presenceData).catch(err => {
+                    console.error('Presence set error:', err);
+                });
+                
+                // Remove when disconnected
+                onDisconnect(myPresenceRef).remove().catch(err => {
+                    console.error('onDisconnect error:', err);
+                });
+            }
+        });
+
+        // Count and display online users
+        const presenceRef = ref(db, 'presence');
+        onValue(presenceRef, (snapshot) => {
+            let count = 0;
+            if (snapshot.exists()) {
+                // Count users who are online
+                snapshot.forEach(() => {
+                    count++;
+                });
+            }
+            onlineCountElement.textContent = count.toString();
+            console.log('Online users:', count); // Debug log
+        }, (error) => {
+            console.error('Presence read error:', error);
+            onlineCountElement.textContent = '?';
+        });
+
+        function addLog(action, scriptName, details = '') {
+            const timestamp = Date.now();
+            const logEntry = {
+                action: action,
+                scriptName: scriptName,
+                details: details,
+                timestamp: timestamp
+            };
+            
+            push(ref(db, 'logs'), logEntry);
+        }
+
+        function cleanOldLogs() {
+            const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+            
+            onValue(ref(db, 'logs'), (snapshot) => {
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const log = child.val();
+                        if (log.timestamp < twentyFourHoursAgo) {
+                            remove(ref(db, 'logs/' + child.key));
+                        }
+                    });
+                }
+            }, { onlyOnce: true });
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            
+            return date.toLocaleString();
+        }
+
+        function enterEditMode() {
+            isEditMode = true;
+            selectedLogs.clear();
+            logsHeaderActions.classList.add('edit-mode');
+            renderLogs();
+        }
+
+        function exitEditMode() {
+            isEditMode = false;
+            selectedLogs.clear();
+            logsHeaderActions.classList.remove('edit-mode');
+            renderLogs();
+        }
+
+        function renderLogs() {
+            onValue(ref(db, 'logs'), (snapshot) => {
+                logsContainer.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    logsContainer.innerHTML = `
+                        <div class="empty-logs">
+                            <h3>No activity logs yet</h3>
+                            <p>Actions will appear here</p>
+                        </div>
+                    `;
+                    selectedLogs.clear();
+                    updateSelectAllButton();
+                    return;
+                }
+                
+                const logs = [];
+                snapshot.forEach((child) => {
+                    logs.push({ key: child.key, ...child.val() });
+                });
+                
+                logs.sort((a, b) => b.timestamp - a.timestamp);
+                
+                logs.forEach(log => {
+                    const logEntry = document.createElement('div');
+                    logEntry.className = `log-entry ${log.action}`;
+                    logEntry.dataset.key = log.key;
+                    
+                    if (isEditMode) {
+                        logEntry.classList.add('selectable');
+                        if (selectedLogs.has(log.key)) {
+                            logEntry.classList.add('selected');
+                        }
+                    }
+                    
+                    let actionText = '';
+                    switch(log.action) {
+                        case 'created':
+                            actionText = 'CREATED';
+                            break;
+                        case 'edited':
+                            actionText = 'EDITED';
+                            break;
+                        case 'deleted':
+                            actionText = 'DELETED';
+                            break;
+                        case 'tag-added':
+                            actionText = 'TAG ADDED';
+                            break;
+                        case 'tag-removed':
+                            actionText = 'TAG REMOVED';
+                            break;
+                    }
+                    
+                    logEntry.innerHTML = `
+                        <div class="log-timestamp">${formatTimestamp(log.timestamp)}</div>
+                        <div class="log-action">${actionText}</div>
+                        <div class="log-details">Script: ${log.scriptName}</div>
+                        ${log.details ? `<div class="log-details">${log.details}</div>` : ''}
+                    `;
+                    
+                    if (isEditMode) {
+                        logEntry.addEventListener('click', () => {
+                            toggleLogSelection(log.key);
+                        });
+                    }
+                    
+                    logsContainer.appendChild(logEntry);
+                });
+                
+                updateSelectAllButton();
+            });
+        }
+
+        function toggleLogSelection(key) {
+            if (!isEditMode) return;
+            
+            if (selectedLogs.has(key)) {
+                selectedLogs.delete(key);
+            } else {
+                selectedLogs.add(key);
+            }
+            
+            const logEntry = logsContainer.querySelector(`[data-key="${key}"]`);
+            if (logEntry) {
+                logEntry.classList.toggle('selected');
+            }
+            
+            updateSelectAllButton();
+        }
+
+        function updateSelectAllButton() {
+            if (!isEditMode) return;
+            
+            const allLogs = logsContainer.querySelectorAll('.log-entry');
+            if (allLogs.length === 0) {
+                selectAllBtn.classList.remove('active');
+                return;
+            }
+            
+            if (selectedLogs.size === allLogs.length) {
+                selectAllBtn.classList.add('active');
+                selectAllBtn.textContent = 'Deselect All';
+            } else {
+                selectAllBtn.classList.remove('active');
+                selectAllBtn.textContent = 'Select All';
+            }
+        }
+
+        selectAllBtn.addEventListener('click', () => {
+            const allLogs = logsContainer.querySelectorAll('.log-entry');
+            
+            if (selectedLogs.size === allLogs.length) {
+                selectedLogs.clear();
+                allLogs.forEach(log => log.classList.remove('selected'));
+            } else {
+                allLogs.forEach(log => {
+                    const key = log.dataset.key;
+                    selectedLogs.add(key);
+                    log.classList.add('selected');
+                });
+            }
+            
+            updateSelectAllButton();
+        });
+
+        deleteSelectedBtn.addEventListener('click', () => {
+            if (selectedLogs.size === 0) {
+                showToast('No logs selected', 'error');
+                return;
+            }
+            
+            let deleteCount = 0;
+            const totalToDelete = selectedLogs.size;
+            
+            selectedLogs.forEach(logKey => {
+                remove(ref(db, 'logs/' + logKey))
+                    .then(() => {
+                        deleteCount++;
+                        if (deleteCount === totalToDelete) {
+                            showToast(`${totalToDelete} log(s) deleted successfully`, 'success');
+                            selectedLogs.clear();
+                            exitEditMode();
+                        }
+                    })
+                    .catch(error => {
+                        showToast('Error deleting logs: ' + error.message, 'error');
+                    });
+            });
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            exitEditMode();
+        });
+
+        cleanOldLogs();
+        renderLogs();
+
+        function showPopup(popup) {
+            popup.classList.add('show');
+        }
+
+        function hidePopup(popup) {
+            popup.classList.remove('show');
+        }
+
+        function clearInputs() {
+            adminPass.value = '';
+            scriptName.value = '';
+            scriptCode.value = '';
+            thumbnailInput.value = '';
+            thumbnailPreview.classList.remove('show');
+            thumbnailFile = null;
+            currentThumbnailUrl = null;
+            isUniversal = false;
+            hasKeySystem = false;
+            editingScriptKey = null;
+            previousScriptState = null;
+            universalCheckbox.classList.remove('checked');
+            keySystemCheckbox.classList.remove('checked');
+            popupTitle.textContent = 'Add New Script';
+            addBtn.textContent = 'Add Script';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const toastMessage = toast.querySelector('.toast-message');
+            const toastIcon = toast.querySelector('.toast-icon');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast show ' + type;
+            
+            if (type === 'success') {
+                toastIcon.textContent = '✓';
+            } else if (type === 'error') {
+                toastIcon.textContent = '✕';
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function matchesFilters(script) {
+            if (filters.universal === 'yes' && !script.isUniversal) return false;
+            if (filters.universal === 'no' && script.isUniversal) return false;
+            if (filters.keySystem === 'yes' && !script.hasKeySystem) return false;
+            if (filters.keySystem === 'no' && script.hasKeySystem) return false;
+            return true;
+        }
+
+        function filterScripts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.script-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('strong').textContent.toLowerCase();
+                const code = card.dataset.code.toLowerCase();
+                const scriptData = {
+                    isUniversal: card.dataset.universal === 'true',
+                    hasKeySystem: card.dataset.keysystem === 'true'
+                };
+                
+                const matchesSearch = name.includes(searchTerm) || code.includes(searchTerm);
+                const matchesFilter = matchesFilters(scriptData);
+                
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            const hasActiveFilters = filters.universal !== 'any' || filters.keySystem !== 'any';
+            if (hasActiveFilters) {
+                filterBtn.classList.add('active');
+            } else {
+                filterBtn.classList.remove('active');
+            }
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                mainTab.style.display = tabName === 'main' ? 'block' : 'none';
+                scriptsTab.style.display = tabName === 'scripts' ? 'block' : 'none';
+                logsTab.style.display = tabName === 'logs' ? 'block' : 'none';
+                
+                if (tabName !== 'logs' && isEditMode) {
+                    exitEditMode();
+                }
+            });
+        });
+
+        universalCheckbox.addEventListener('click', () => {
+            isUniversal = !isUniversal;
+            universalCheckbox.classList.toggle('checked');
+        });
+
+        keySystemCheckbox.addEventListener('click', () => {
+            hasKeySystem = !hasKeySystem;
+            keySystemCheckbox.classList.toggle('checked');
+        });
+
+        function cycleFilterCheckbox(element, filterKey) {
+            const currentState = filters[filterKey];
+            
+            if (currentState === 'any') {
+                filters[filterKey] = 'yes';
+                element.className = 'filter-checkbox checked';
+                element.dataset.state = 'yes';
+            } else if (currentState === 'yes') {
+                filters[filterKey] = 'no';
+                element.className = 'filter-checkbox unchecked';
+                element.dataset.state = 'no';
+            } else {
+                filters[filterKey] = 'any';
+                element.className = 'filter-checkbox';
+                element.dataset.state = 'any';
+            }
+        }
+
+        filterUniversal.addEventListener('click', () => {
+            cycleFilterCheckbox(filterUniversal, 'universal');
+        });
+
+        filterKeySystem.addEventListener('click', () => {
+            cycleFilterCheckbox(filterKeySystem, 'keySystem');
+        });
+
+        filterBtn.addEventListener('click', () => {
+            showPopup(filterPopup);
+        });
+
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            hidePopup(filterPopup);
+            filterScripts();
+        });
+
+        document.getElementById('clearFilters').addEventListener('click', () => {
+            filters.universal = 'any';
+            filters.keySystem = 'any';
+            filterUniversal.className = 'filter-checkbox';
+            filterUniversal.dataset.state = 'any';
+            filterKeySystem.className = 'filter-checkbox';
+            filterKeySystem.dataset.state = 'any';
+            hidePopup(filterPopup);
+            filterScripts();
+        });
+
+        document.getElementById('addScriptBtn').addEventListener('click', () => {
+            actionType = 'add';
+            showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
+        });
+
+        document.getElementById('clearLogsBtn').addEventListener('click', () => {
+            actionType = 'clear-logs';
+            showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
+        });
+
+        document.getElementById('confirmPasswordBtn').addEventListener('click', () => {
+            const password = adminPass.value.trim();
+            
+            if (!ADMIN_PASSWORDS.includes(password)) {
+                showToast('Incorrect password. Access denied.', 'error');
+                return;
+            }
+            
+            hidePopup(passwordPopup);
+            adminPass.value = '';
+            
+            if (actionType === 'add' || actionType === 'edit') {
+                showPopup(addPopup);
+                setTimeout(() => scriptName.focus(), 100);
+            } else if (actionType === 'delete' && pendingDeleteKey) {
+                onValue(ref(db, 'scripts/' + pendingDeleteKey), (snapshot) => {
+                    if (snapshot.exists()) {
+                        const script = snapshot.val();
+                        remove(ref(db, 'scripts/' + pendingDeleteKey))
+                            .then(() => {
+                                addLog('deleted', script.name);
+                                showToast('Script deleted successfully', 'success');
+                                pendingDeleteKey = null;
+                            })
+                            .catch(error => {
+                                showToast('Error deleting script: ' + error.message, 'error');
+                            });
+                    }
+                }, { onlyOnce: true });
+            } else if (actionType === 'clear-logs') {
+                enterEditMode();
+            }
+            
+            if (actionType === 'edit' && window.tempEditData) {
+                setTimeout(() => {
+                    loadEditData(window.tempEditData);
+                    delete window.tempEditData;
+                }, 100);
+            }
+        });
+
+        document.getElementById('cancelPasswordBtn').addEventListener('click', () => {
+            hidePopup(passwordPopup);
+            clearInputs();
+            actionType = null;
+            pendingDeleteKey = null;
+        });
+
+        document.getElementById('addBtn').addEventListener('click', async () => {
+            const name = scriptName.value.trim();
+            const code = scriptCode.value.trim();
+            
+            if (!name || !code) {
+                showToast('Please fill in both script name and code', 'error');
+                return;
+            }
+            
+            const addBtnElement = document.getElementById('addBtn');
+            addBtnElement.disabled = true;
+            addBtnElement.textContent = 'Uploading...';
+            
+            try {
+                let thumbnailUrl = currentThumbnailUrl;
+                
+                // Upload thumbnail if a new file was selected
+                if (thumbnailFile) {
+                    const timestamp = Date.now();
+                    const fileName = `thumbnails/${timestamp}_${thumbnailFile.name}`;
+                    const thumbRef = storageRef(storage, fileName);
+                    
+                    await uploadBytes(thumbRef, thumbnailFile);
+                    thumbnailUrl = await getDownloadURL(thumbRef);
+                }
+                
+                const scriptData = {
+                    name: name,
+                    code: code,
+                    isUniversal: isUniversal,
+                    hasKeySystem: hasKeySystem,
+                    timestamp: Date.now()
+                };
+                
+                // Add thumbnail URL if it exists
+                if (thumbnailUrl) {
+                    scriptData.thumbnail = thumbnailUrl;
+                }
+                
+                if (editingScriptKey) {
+                    await update(ref(db, 'scripts/' + editingScriptKey), scriptData);
+                    
+                    if (previousScriptState) {
+                        if (isUniversal && !previousScriptState.isUniversal) {
+                            addLog('tag-added', name, 'Added: Universal');
+                        } else if (!isUniversal && previousScriptState.isUniversal) {
+                            addLog('tag-removed', name, 'Removed: Universal');
+                        }
+                        
+                        if (hasKeySystem && !previousScriptState.hasKeySystem) {
+                            addLog('tag-added', name, 'Added: Key System');
+                        } else if (!hasKeySystem && previousScriptState.hasKeySystem) {
+                            addLog('tag-removed', name, 'Removed: Key System');
+                        }
+                    }
+                    
+                    addLog('edited', name);
+                    showToast('Script updated successfully!', 'success');
+                } else {
+                    const newScriptRef = push(ref(db, 'scripts'));
+                    await update(newScriptRef, scriptData);
+                    addLog('created', name);
+                    showToast('Script added successfully!', 'success');
+                }
+                
+                hidePopup(addPopup);
+                clearInputs();
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                addBtnElement.disabled = false;
+                addBtnElement.textContent = editingScriptKey ? 'Update Script' : 'Add Script';
+            }
+        });
+
+        document.getElementById('cancelAddBtn').addEventListener('click', () => {
+            hidePopup(addPopup);
+            clearInputs();
+        });
+
+        window.copyScript = async (code) => {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(code);
+                    showToast('Code copied to clipboard!', 'success');
+                } else {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = code;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        showToast('Code copied to clipboard!', 'success');
+                    } catch (err) {
+                        showToast('Failed to copy code', 'error');
+                    }
+                    
+                    textArea.remove();
+                }
+            } catch (err) {
+                showToast('Failed to copy code', 'error');
+            }
+        };
+
+        window.requestEdit = (key, scriptData) => {
+            editingScriptKey = key;
+            actionType = 'edit';
+            previousScriptState = {
+                isUniversal: scriptData.isUniversal,
+                hasKeySystem: scriptData.hasKeySystem
+            };
+            currentThumbnailUrl = scriptData.thumbnail || null;
+            showPopup(passwordPopup);
+            window.tempEditData = scriptData;
+            setTimeout(() => adminPass.focus(), 100);
+        };
+
+        function loadEditData(scriptData) {
+            scriptName.value = scriptData.name;
+            scriptCode.value = scriptData.code;
+            isUniversal = scriptData.isUniversal || false;
+            hasKeySystem = scriptData.hasKeySystem || false;
+            currentThumbnailUrl = scriptData.thumbnail || null;
+            
+            // Show existing thumbnail if present
+            if (currentThumbnailUrl) {
+                thumbnailPreview.src = currentThumbnailUrl;
+                thumbnailPreview.classList.add('show');
+            }
+            
+            if (isUniversal) universalCheckbox.classList.add('checked');
+            if (hasKeySystem) keySystemCheckbox.classList.add('checked');
+            
+            popupTitle.textContent = 'Edit Script';
+            addBtn.textContent = 'Update Script';
+        }
+
+        window.requestDelete = (key) => {
+            pendingDeleteKey = key;
+            actionType = 'delete';
+            showPopup(passwordPopup);
+            setTimeout(() => adminPass.focus(), 100);
+        };
+
+        onValue(ref(db, 'scripts'), (snapshot) => {
+            scriptsContainer.innerHTML = '';
+            
+            if (!snapshot.exists()) {
+                scriptsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No scripts yet</h3>
+                        <p>Click the + button to add your first script</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let delay = 0;
+            snapshot.forEach((childSnapshot) => {
+                const key = childSnapshot.key;
+                const script = childSnapshot.val();
+                
+                const scriptCard = document.createElement('div');
+                scriptCard.className = 'script-card';
+                scriptCard.style.animationDelay = `${delay}s`;
+                delay += 0.05;
+                
+                scriptCard.dataset.code = script.code;
+                scriptCard.dataset.universal = script.isUniversal || false;
+                scriptCard.dataset.keysystem = script.hasKeySystem || false;
+                
+                let badges = '';
+                if (script.isUniversal) {
+                    badges += '<span class="badge universal">Universal</span>';
+                }
+                if (script.hasKeySystem) {
+                    badges += '<span class="badge key-system">Key System</span>';
+                }
+                
+                let thumbnailHtml = '';
+                if (script.thumbnail) {
+                    thumbnailHtml = `<img src="${script.thumbnail}" alt="${escapeHtml(script.name)}" class="script-thumbnail">`;
+                }
+                
+                scriptCard.innerHTML = `
+                    ${thumbnailHtml}
+                    <div class="script-card-header">
+                        <strong>${escapeHtml(script.name)}</strong>
+                        <div class="script-badges">
+                            ${badges}
+                        </div>
+                    </div>
+                    <pre>${escapeHtml(script.code)}</pre>
+                    <div class="script-actions">
+                        <button class="copy-btn" data-action="copy">
+                            Copy
+                        </button>
+                        <button class="edit-btn" data-action="edit" data-key="${key}">
+                            Edit
+                        </button>
+                        <button class="delete-btn" data-action="delete" data-key="${key}">
+                            Delete
+                        </button>
+                    </div>
+                `;
+                
+                scriptsContainer.appendChild(scriptCard);
+            });
+            
+            document.querySelectorAll('[data-action="copy"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const card = e.target.closest('.script-card');
+                    const code = card.dataset.code;
+                    copyScript(code);
+                });
+            });
+            
+            document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const key = e.target.dataset.key;
+                    const card = e.target.closest('.script-card');
+                    const scriptData = {
+                        name: card.querySelector('strong').textContent,
+                        code: card.dataset.code,
+                        isUniversal: card.dataset.universal === 'true',
+                        hasKeySystem: card.dataset.keysystem === 'true',
+                        thumbnail: card.querySelector('.script-thumbnail')?.src || null
+                    };
+                    requestEdit(key, scriptData);
+                });
+            });
+            
+            document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const key = e.target.dataset.key;
+                    requestDelete(key);
+                });
+            });
+            
+            filterScripts();
+        });
+
+        searchInput.addEventListener('input', filterScripts);
+
+        [passwordPopup, addPopup, filterPopup].forEach(popup => {
+            popup.addEventListener('click', (e) => {
+                if (e.target === popup) {
+                    hidePopup(popup);
+                    if (popup === passwordPopup || popup === addPopup) {
+                        clearInputs();
+                        actionType = null;
+                        pendingDeleteKey = null;
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (passwordPopup.classList.contains('show')) {
+                    document.getElementById('cancelPasswordBtn').click();
+                } else if (addPopup.classList.contains('show')) {
+                    document.getElementById('cancelAddBtn').click();
+                } else if (filterPopup.classList.contains('show')) {
+                    hidePopup(filterPopup);
+                } else if (isEditMode) {
+                    exitEditMode();
+                }
+            }
+
+            if (e.key === 'Enter' && !e.shiftKey) {
+                if (passwordPopup.classList.contains('show')) {
+                    e.preventDefault();
+                    document.getElementById('confirmPasswordBtn').click();
+                } else if (addPopup.classList.contains('show') && document.activeElement !== scriptCode) {
+                    e.preventDefault();
+                    document.getElementById('addBtn').click();
+                } else if (filterPopup.classList.contains('show')) {
+                    e.preventDefault();
+                    document.getElementById('applyFilters').click();
+                }
+            }
+        });
+
+        // PWA - Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA - Install Prompt
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            installBtn.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                return;
+            }
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                showToast('App installed successfully! 🎉', 'success');
+            }
+            
+            // Clear the deferredPrompt so it can only be used once
+            deferredPrompt = null;
+            // Hide the install button
+            installBtn.classList.remove('show');
+        });
+
+        
+        window.addEventListener('appinstalled', () => {
+            installBtn.classList.remove('show');
+            showToast('KittyScripts installed! 🎉', 'success');
+            deferredPrompt = null;
+        });
+
+        // Check if already running as installed PWA
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            console.log('Running as installed PWA');
+            installBtn.style.display = 'none';
+        }
